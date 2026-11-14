@@ -1,0 +1,6 @@
+{
+  "appId": "com.nart.microword",
+  "appName": "MicroWord",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
