@@ -30,13 +30,12 @@ jobs:
           npx cap add android
 
       - name: 5. Poner el icono de la app (logo.png) automáticamente
-        run: |
-          mkdir -p assets
-          cp www/logo.png assets/icon-only.png
-          cp www/logo.png assets/icon-foreground.png
-          cp www/logo.png assets/splash.png
-          npx capacitor-assets generate --android --iconBackgroundColor '#185ABD' --splashBackgroundColor '#185ABD'
-
+    run: |
+      mkdir -p assets
+      cp www/logo.png assets/icon.png
+      cp www/logo.png assets/splash.png
+      npx capacitor-assets generate --android --iconBackgroundColor '#185ABD' --splashBackgroundColor '#185ABD'
+      
       - name: 6. Sincronizar archivos web offline (index.html)
         run: npx cap sync android
 

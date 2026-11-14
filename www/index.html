@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Documento 1</title>
+<style>
+  :root {
+    --word-blue: #185ABD;
+    --word-blue-dark: #103F91;
+    --word-blue-light: #E1ECF9;
+    --ribbon-bg: #F3F2F1;
+    --border-color: #D2D0CE;
+    --workspace-bg: #E6E6E6;
+    --text-main: #252423;
+    --text-muted: #605E5C;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    background: var(--workspace-bg);
+    color: var(--text-main);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ================= 1. BARRA DE TÍTULO SUPERIOR ================= */
+  .top-bar {
+    background: var(--word-blue);
+    color: #fff;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .top-left, .top-center, .top-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .app-logo {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--word-blue);
+    font-weight: 900;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    object-fit: contain;
+    padding: 2px;
+    flex-shrink: 0;
+  }
+
+  .autosave-box {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+
+  .toggle-switch {
+    width: 32px;
+    height: 16px;
+    background: rgba(255,255,255,0.35);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .toggle-switch.on { background: #2B88D8; }
+  .toggle-knob {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 1px;
+    left: 2px;
+    transition: 0.2s;
+  }
+  .toggle-switch.on .toggle-knob { left: 16px; }
+
+  .icon-btn-top {
+    background: transparent;
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .icon-btn-top:hover, .icon-btn-top:active {
+    background: rgba(255,255,255,0.18);
+  }
+
+  .doc-title-input {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: 135px;
+    text-align: center;
+  }
+  .doc-title-input:focus {
+    background: #fff;
+    color: #222;
+    outline: none;
+  }
+
+  .user-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #D83B01;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+
+  /* ================= 2. BARRA DE PESTAÑAS Y EXPORTACIÓN ================= */
+  .menu-row {
+    background: #fff;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    height: 38px;
+    flex-shrink: 0;
+    gap: 8px;
+  }
+
+  .tabs-scroll {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 2px;
+    height: 100%;
+  }
+  .tabs-scroll::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    padding: 0 12px;
+    height: 100%;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .tab-btn.file-tab {
+    background: var(--word-blue);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 4px;
+    height: 28px;
+    margin-right: 4px;
+  }
+  .tab-btn.active {
+    color: var(--word-blue);
+    font-weight: 600;
+  }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 3px;
+    background: var(--word-blue);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .btn-doc {
+    background: #fff;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .btn-pdf {
+    background: var(--word-blue);
+    color: #fff;
+    border: 1px solid var(--word-blue-dark);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  /* ================= 3. CINTA DE OPCIONES (THE RIBBON) ================= */
+  .ribbon-wrapper {
+    background: var(--ribbon-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 6px 8px 4px 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  .ribbon-wrapper::-webkit-scrollbar { display: none; }
+
+  .ribbon-panel {
+    display: none;
+    align-items: stretch;
+    gap: 10px;
+    width: max-content;
+    min-height: 78px;
+  }
+  .ribbon-panel.active { display: flex; }
+
+  .ribbon-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-right: 10px;
+    border-right: 1px solid var(--border-color);
+  }
+  .ribbon-section:last-child { border-right: none; }
+
+  .section-body {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+  .section-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tool-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .section-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 3px;
+    letter-spacing: 0.2px;
+  }
+
+  /* Botones del Ribbon */
+  .btn-paste-big {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    gap: 2px;
+  }
+  .btn-paste-big span { font-size: 20px; }
+
+  .tool-btn {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    min-width: 28px;
+    height: 26px;
+    padding: 0 6px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .tool-btn:hover { background: #EBF3FC; border-color: #9ACEFF; }
+  .tool-btn.active {
+    background: #C7E0F4;
+    border-color: var(--word-blue);
+    color: var(--word-blue-dark);
+    font-weight: 700;
+  }
+
+  .tool-select {
+    height: 26px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    padding: 0 4px;
+    font-size: 12px;
+    background: #fff;
+    color: var(--text-main);
+  }
+
+  /* Botón de Color y Resaltador estilo Word */
+  .color-tool {
+    display: inline-flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    height: 26px;
+    padding: 0 3px;
+    gap: 2px;
+  }
+  .color-tool input[type="color"] {
+    width: 18px;
+    height: 18px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  /* Galería de Estilos estilo Word */
+  .styles-gallery {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .style-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 72px;
+    height: 54px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .style-card.active, .style-card:hover {
+    border: 2px solid var(--word-blue);
+    background: #F4F9FD;
+  }
+  .style-preview {
+    font-size: 13px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  .style-name {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* ================= 4. REGLA MILIMETRADA ================= */
+  .ruler-bar {
+    background: #F8F8F8;
+    border-bottom: 1px solid var(--border-color);
+    height: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .ruler-inner {
+    width: 100%;
+    max-width: 210mm;
+    height: 14px;
+    background: #fff;
+    border: 1px solid #C8C6C4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 9px;
+    color: #605E5C;
+  }
+
+  /* ================= 5. ÁREA DE TRABAJO Y HOJA A4 ================= */
+  .workspace {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 14px 8px 36px 8px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  /* REGLA DE ORO: El fondo de #editor es SIEMPRE blanco (o el color de hoja elegido) */
+  #editor.page-sheet {
+    background-color: #ffffff !important;
+    width: 100%;
+    max-width: 210mm;
+    min-height: 297mm;
+    padding: 20px 18px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+    border: 1px solid #D2D0CE;
+    outline: none;
+    user-select: text;
+    font-family: 'Calibri', 'Segoe UI', sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #000000;
+    word-wrap: break-word;
+    transform-origin: top center;
+  }
+
+  @media (min-width: 768px) {
+    #editor.page-sheet {
+      padding: 25.4mm;
+    }
+  }
+
+  #editor.page-sheet p { margin-bottom: 8px; }
+  #editor.page-sheet table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  #editor.page-sheet td, #editor.page-sheet th { border: 1px solid #333; padding: 6px; min-width: 40px; }
+  #editor.page-sheet blockquote {
+    border-left: 3px solid var(--word-blue);
+    padding-left: 10px;
+    color: #555;
+    font-style: italic;
+    margin: 8px 0;
+  }
+
+  /* ================= 6. BARRA DE ESTADO INFERIOR ================= */
+  .status-bar {
+    background: var(--word-blue);
+    color: #fff;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    font-size: 11px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 12px;
+  }
+  .status-left, .status-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .zoom-slider { width: 75px; accent-color: #fff; cursor: pointer; }
+
+  /* ================= 7. MODAL PARA NOMBRAR Y EXPORTAR ARCHIVO ================= */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 16px;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal-card {
+    background: #fff;
+    width: 100%;
+    max-width: 380px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+  .modal-header {
+    background: var(--word-blue);
+    color: #fff;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .modal-body label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  .modal-input {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid #8A8886;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .modal-input:focus {
+    border-color: var(--word-blue);
+    outline: 2px solid var(--word-blue-light);
+  }
+  .modal-footer {
+    padding: 10px 16px;
+    background: #F3F2F1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* ================= 8. IMPRESIÓN Y EXPORTACIÓN A PDF LIMPIA ================= */
+  @media print {
+    @page { size: A4; margin: 20mm; }
+    .top-bar, .menu-row, .ribbon-wrapper, .ruler-bar, .status-bar, .modal-backdrop {
+      display: none !important;
+    }
+    body, .workspace {
+      background: #ffffff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+    #editor.page-sheet {
+      box-shadow: none !important;
+      border: none !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-height: auto !important;
+      zoom: 100% !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 1. BARRA DE TÍTULO SUPERIOR -->
+  <div class="top-bar">
+    <div class="top-left">
+      <img src="logo.png" alt="W" class="app-logo" onerror="this.outerHTML='<div class=\'app-logo\'>W</div>'" />
+      <div class="autosave-box" onclick="toggleAutoSave()">
+        <span>Autoguardado</span>
+        <div id="autosaveSwitch" class="toggle-switch on"><div class="toggle-knob"></div></div>
+      </div>
+      <button class="icon-btn-top" onclick="openSaveModal('pdf')" title="Guardar">💾</button>
+      <button class="icon-btn-top" onclick="execCmd('undo')" title="Deshacer">↶</button>
+      <button class="icon-btn-top" onclick="execCmd('redo')" title="Rehacer">↷</button>
+    </div>
+
+    <div class="top-center">
+      <input type="text" id="docNameInput" class="doc-title-input" value="Documento 1" title="Cambiar nombre del archivo" />
+    </div>
+
+    <div class="top-right">
+      <button class="icon-btn-top" onclick="clearDocument()" title="Hoja nueva en blanco">📄</button>
+      <div class="user-badge" title="MicroWord NART">NR</div>
+    </div>
+  </div>
+
+  <!-- 2. PESTAÑAS + BOTONES DE GUARDAR PDF / DOC -->
+  <div class="menu-row">
+    <div class="tabs-scroll">
+      <button class="tab-btn file-tab" onclick="openSaveModal('pdf')">Archivo</button>
+      <button class="tab-btn active" onclick="switchTab('inicio', this)">Inicio</button>
+      <button class="tab-btn" onclick="switchTab('insertar', this)">Insertar</button>
+      <button class="tab-btn" onclick="switchTab('diseno', this)">Diseño</button>
+      <button class="tab-btn" onclick="switchTab('disposicion', this)">Disposición</button>
+      <button class="tab-btn" onclick="switchTab('referencias', this)">Referencias</button>
+      <button class="tab-btn" onclick="switchTab('revisar', this)">Revisar</button>
+      <button class="tab-btn" onclick="switchTab('vista', this)">Vista</button>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn-doc" onclick="openSaveModal('doc')">⬇ .DOC</button>
+      <button class="btn-pdf" onclick="openSaveModal('pdf')">🖨️ Guardar PDF</button>
+    </div>
+  </div>
+
+  <!-- 3. CINTA DE OPCIONES (RIBBON COMPLETO) -->
+  <div class="ribbon-wrapper">
+
+    <!-- ================= PESTAÑA INICIO ================= -->
+    <div id="tab-inicio" class="ribbon-panel active">
+      <!-- Grupo Portapapeles -->
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="btn-paste-big" onclick="pasteClipboard()">
+            <span>📋</span>Pegar
+          </button>
+          <div class="section-rows">
+            <button class="tool-btn" onclick="execCmd('cut')">✂️ Cortar</button>
+            <button class="tool-btn" onclick="execCmd('copy')">📄 Copiar</button>
+          </div>
+        </div>
+        <div class="section-label">Portapapeles</div>
+      </div>
+
+      <!-- Grupo Fuente -->
+      <div class="ribbon-section">
+        <div class="section-body">
+          <div class="section-rows">
+            <div class="tool-row">
+              <select id="fontName" class="tool-select" onchange="execCmd('fontName', this.value)">
+                <option value="Calibri">Calibri</option>
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+              <select id="fontSize" class="tool-select" onchange="changeFontSizePt(this.value)">
+                <option value="9pt">9</option>
+                <option value="10pt">10</option>
+                <option value="11pt" selected>11</option>
+                <option value="12pt">12</option>
+                <option value="14pt">14</option>
+                <option value="16pt">16</option>
+                <option value="18pt">18</option>
+                <option value="24pt">24</option>
+                <option value="36pt">36</option>
+              </select>
+              <button class="tool-btn" onclick="stepFontSize(2)" title="Aumentar fuente">A▲</button>
+              <button class="tool-btn" onclick="stepFontSize(-2)" title="Disminuir fuente">A▼</button>
+              <button class="tool-btn" onclick="execCmd('removeFormat')" title="Borrar formato">🧹</button>
+            </div>
+
+            <div class="tool-row">
+              <button id="btn-bold" class="tool-btn" onclick="execCmd('bold')"><b>B</b></button>
+              <button id="btn-italic" class="tool-btn" onclick="execCmd('italic')"><i>I</i></button>
+              <button id="btn-underline" class="tool-btn" onclick="execCmd('underline')"><u>U</u></button>
+              <button id="btn-strike" class="tool-btn" onclick="execCmd('strikeThrough')"><s>abc</s></button>
+              <button id="btn-sub" class="tool-btn" onclick="execCmd('subscript')">x₂</button>
+              <button id="btn-sup" class="tool-btn" onclick="execCmd('superscript')">x²</button>
+
+              <!-- Resaltador corregido (solo pinta el texto, nunca la hoja) -->
+              <div class="color-tool" title="Color de resaltado de texto">
+                <button class="tool-btn" style="border:none;height:22px;padding:0 4px;" onclick="applyHighlight(document.getElementById('hilitePicker').value)">🖍️</button>
+                <input type="color" id="hilitePicker" value="#ffff00" onchange="applyHighlight(this.value)">
+                <button class="tool-btn" style="border:none;height:22px;padding:0 4px;" onclick="removeHighlight()" title="Quitar resaltado">🚫</button>
+              </div>
+
+              <!-- Color de fuente -->
+              <div class="color-tool" title="Color de fuente">
+                <span style="font-weight:700;font-size:12px;color:#D83B01;padding-left:3px;">A</span>
+                <input type="color" id="forePicker" value="#000000" onchange="execCmd('foreColor', this.value)">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="section-label">Fuente</div>
+      </div>
+
+      <!-- Grupo Párrafo -->
+      <div class="ribbon-section">
+        <div class="section-body">
+          <div class="section-rows">
+            <div class="tool-row">
+              <button id="btn-ul" class="tool-btn" onclick="execCmd('insertUnorderedList')" title="Viñetas">•≡</button>
+              <button id="btn-ol" class="tool-btn" onclick="execCmd('insertOrderedList')" title="Numeración">1≡</button>
+              <button class="tool-btn" onclick="execCmd('outdent')" title="Disminuir sangría">⇤</button>
+              <button class="tool-btn" onclick="execCmd('indent')" title="Aumentar sangría">⇥</button>
+              <select class="tool-select" onchange="setLineHeight(this.value)" title="Interlineado">
+                <option value="1.0">↕ 1.0</option>
+                <option value="1.15" selected>↕ 1.15</option>
+                <option value="1.5">↕ 1.5</option>
+                <option value="2.0">↕ 2.0</option>
+              </select>
+            </div>
+            <div class="tool-row">
+              <button id="btn-left" class="tool-btn active" onclick="execCmd('justifyLeft')" title="Alinear a la izquierda">⬅</button>
+              <button id="btn-center" class="tool-btn" onclick="execCmd('justifyCenter')" title="Centrar">↔</button>
+              <button id="btn-right" class="tool-btn" onclick="execCmd('justifyRight')" title="Alinear a la derecha">➡</button>
+              <button id="btn-full" class="tool-btn" onclick="execCmd('justifyFull')" title="Justificar">☰</button>
+            </div>
+          </div>
+        </div>
+        <div class="section-label">Párrafo</div>
+      </div>
+
+      <!-- Grupo Estilos -->
+      <div class="ribbon-section">
+        <div class="section-body">
+          <div class="styles-gallery">
+            <div class="style-card active" onclick="applyQuickStyle('P', '11pt', '#000000', false, this)">
+              <span class="style-preview">AaBbCcDd</span>
+              <span class="style-name">Normal</span>
+            </div>
+            <div class="style-card" onclick="applyQuickStyle('H1', '20pt', '#185ABD', false, this)">
+              <span class="style-preview" style="color:#185ABD;font-size:15px;">AaBbCcDd</span>
+              <span class="style-name">Título 1</span>
+            </div>
+            <div class="style-card" onclick="applyQuickStyle('H2', '15pt', '#103F91', false, this)">
+              <span class="style-preview" style="color:#103F91;font-weight:600;">AaBbCcDd</span>
+              <span class="style-name">Título 2</span>
+            </div>
+            <div class="style-card" onclick="applyQuickStyle('H3', '13pt', '#323130', true, this)">
+              <span class="style-preview" style="font-style:italic;">AaBbCcDd</span>
+              <span class="style-name">Subtítulo</span>
+            </div>
+            <div class="style-card" onclick="applyQuickStyle('BLOCKQUOTE', '11pt', '#555555', true, this)">
+              <span class="style-preview" style="color:#666;font-style:italic;">"Cita"</span>
+              <span class="style-name">Cita</span>
+            </div>
+          </div>
+        </div>
+        <div class="section-label">Estilos</div>
+      </div>
+
+      <!-- Grupo Edición -->
+      <div class="ribbon-section">
+        <div class="section-body">
+          <div class="section-rows">
+            <button class="tool-btn" onclick="findAndReplace()">🔍 Buscar y reemplazar</button>
+            <button class="tool-btn" onclick="execCmd('selectAll')">☑️ Seleccionar todo</button>
+          </div>
+        </div>
+        <div class="section-label">Edición</div>
+      </div>
+    </div>
+
+    <!-- ================= PESTAÑA INSERTAR ================= -->
+    <div id="tab-insertar" class="ribbon-panel">
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="insertPageBreak()">📄 Salto de línea doble</button>
+        </div>
+        <div class="section-label">Páginas</div>
+      </div>
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="insertTable()">⊞ Insertar Tabla</button>
+        </div>
+        <div class="section-label">Tablas</div>
+      </div>
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="document.getElementById('imgUpload').click()">🖼️ Imagen desde dispositivo</button>
+          <input type="file" id="imgUpload" accept="image/*" style="display:none" onchange="insertImageFile(this)">
+          <button class="tool-btn" onclick="execCmd('insertHorizontalRule')">― Línea divisoria</button>
+        </div>
+        <div class="section-label">Ilustraciones</div>
+      </div>
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="insertLink()">🔗 Vínculo</button>
+          <button class="tool-btn" onclick="insertDate()">📅 Fecha y hora</button>
+        </div>
+        <div class="section-label">Vínculos y Fecha</div>
+      </div>
+    </div>
+
+    <!-- ================= PESTAÑA DISEÑO ================= -->
+    <div id="tab-diseno" class="ribbon-panel">
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="togglePageBorder()">▣ Borde de página</button>
+        </div>
+        <div class="section-label">Bordes</div>
+      </div>
+    </div>
+
+    <!-- ================= PESTAÑA DISPOSICIÓN ================= -->
+    <div id="tab-disposicion" class="ribbon-panel">
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="setMargins('12px')">Márgenes Estrechos</button>
+          <button class="tool-btn" onclick="setMargins('22px')">Márgenes Normales</button>
+          <button class="tool-btn" onclick="setMargins('38px')">Márgenes Anchos</button>
+        </div>
+        <div class="section-label">Márgenes</div>
+      </div>
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="setOrientation('portrait')">📄 Vertical</button>
+          <button class="tool-btn" onclick="setOrientation('landscape')">🖼️ Horizontal</button>
+        </div>
+        <div class="section-label">Orientación</div>
+      </div>
+    </div>
+
+    <!-- ================= PESTAÑA REFERENCIAS ================= -->
+    <div id="tab-referencias" class="ribbon-panel">
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="insertTOC()">📑 Insertar Índice Automático</button>
+          <button class="tool-btn" onclick="insertFootnote()">¹ Insertar Nota al pie</button>
+        </div>
+        <div class="section-label">Tabla de contenido y Notas</div>
+      </div>
+    </div>
+
+    <!-- ================= PESTAÑA REVISAR ================= -->
+    <div id="tab-revisar" class="ribbon-panel">
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="showStats()">📊 Contar palabras y caracteres</button>
+          <button class="tool-btn" onclick="toggleSpellcheck()">✔️ Corrector ortográfico</button>
+        </div>
+        <div class="section-label">Revisión</div>
+      </div>
+    </div>
+
+    <!-- ================= PESTAÑA VISTA ================= -->
+    <div id="tab-vista" class="ribbon-panel">
+      <div class="ribbon-section">
+        <div class="section-body">
+          <button class="tool-btn" onclick="toggleRuler()">📏 Mostrar/Ocultar Regla</button>
+          <button class="tool-btn" onclick="setZoom(85)">Zoom 85%</button>
+          <button class="tool-btn" onclick="setZoom(100)">Zoom 100%</button>
+          <button class="tool-btn" onclick="setZoom(125)">Zoom 125%</button>
+        </div>
+        <div class="section-label">Zoom y Vista</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 4. REGLA MILIMETRADA SUPERIOR -->
+  <div id="rulerBar" class="ruler-bar">
+    <div class="ruler-inner">
+      <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+    </div>
+  </div>
+
+  <!-- 5. ÁREA DE TRABAJO (HOJA 100% EN BLANCO AL INICIAR) -->
+  <div class="workspace">
+    <div id="editor" class="page-sheet" contenteditable="true" spellcheck="true"><p><br></p></div>
+  </div>
+
+  <!-- 6. BARRA DE ESTADO INFERIOR -->
+  <div class="status-bar">
+    <div class="status-left">
+      <span>Página 1 de 1</span>
+      <span id="wordCount">0 palabras</span>
+      <span>🌐 Español</span>
+      <span id="saveStatus">✓ Guardado</span>
+    </div>
+    <div class="status-right">
+      <button class="icon-btn-top" style="width:22px;height:22px;" onclick="setZoom(Math.max(60, currentZoom - 10))">−</button>
+      <input type="range" id="zoomSlider" class="zoom-slider" min="60" max="150" value="100" oninput="setZoom(this.value)">
+      <button class="icon-btn-top" style="width:22px;height:22px;" onclick="setZoom(Math.min(150, currentZoom + 10))">+</button>
+      <span id="zoomLabel">100%</span>
+    </div>
+  </div>
+
+  <!-- 7. MODAL PARA PONER NOMBRE AL ARCHIVO Y EXPORTAR A PDF / DOC -->
+  <div id="saveModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span id="modalTitle">Guardar documento</span>
+        <button class="icon-btn-top" onclick="closeSaveModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label for="modalFileName">Nombre del archivo:</label>
+        <input type="text" id="modalFileName" class="modal-input" placeholder="Ej. Tarea de Redes" />
+        <label for="modalFormat">Formato de salida:</label>
+        <select id="modalFormat" class="modal-input">
+          <option value="pdf">Documento PDF (.pdf)</option>
+          <option value="doc">Documento de Microsoft Word (.doc)</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-doc" onclick="closeSaveModal()">Cancelar</button>
+        <button class="btn-pdf" onclick="confirmSaveFile()">Guardar ahora</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const editor = document.getElementById('editor');
+  const docNameInput = document.getElementById('docNameInput');
+  const wordCountEl = document.getElementById('wordCount');
+  const saveStatusEl = document.getElementById('saveStatus');
+  let autoSaveEnabled = true;
+  let currentZoom = 100;
+
+  // Forzar que cada Enter cree un párrafo <p> limpio para que nunca se pinte toda la hoja
+  document.execCommand('defaultParagraphSeparator', false, 'p');
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedHtml = localStorage.getItem('microword_v2_html');
+    const savedName = localStorage.getItem('microword_v2_name');
+    if (savedHtml && savedHtml.trim() !== '') {
+      editor.innerHTML = savedHtml;
+    } else {
+      editor.innerHTML = '<p><br></p>';
+    }
+    if (savedName) {
+      docNameInput.value = savedName;
+      document.title = savedName;
+    }
+    // Limpiar cualquier background-color accidental heredado en el contenedor
+    editor.style.backgroundColor = '#ffffff';
+    updateStats();
+  });
+
+  // Asegurar que siempre exista al menos un <p> dentro del editor
+  function ensureParagraphIntegrity() {
+    if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') {
+      editor.innerHTML = '<p><br></p>';
+    }
+    editor.style.backgroundColor = '#ffffff';
+  }
+
+  function execCmd(command, value = null) {
+    editor.focus();
+    document.execCommand('styleWithCSS', false, false);
+    document.execCommand(command, false, value);
+    ensureParagraphIntegrity();
+    updateToolbarState();
+    triggerAutoSave();
+  }
+
+  // SOLUCIÓN DEFINITIVA AL RESALTADOR: Solo pinta las palabras seleccionadas, jamás la hoja
+  function applyHighlight(color) {
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+
+    if (sel.isCollapsed) {
+      alert('Selecciona primero con el dedo o el cursor las palabras que deseas resaltar.');
+      return;
+    }
+
+    document.execCommand('styleWithCSS', false, true);
+    document.execCommand('hiliteColor', false, color);
+    document.execCommand('styleWithCSS', false, false);
+
+    // Blindaje extra: el contenedor #editor siempre permanece blanco
+    editor.style.backgroundColor = '#ffffff';
+    triggerAutoSave();
+  }
+
+  function removeHighlight() {
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) {
+      alert('Selecciona el texto resaltado para quitarle el color de fondo.');
+      return;
+    }
+    document.execCommand('styleWithCSS', false, true);
+    document.execCommand('hiliteColor', false, 'transparent');
+    document.execCommand('styleWithCSS', false, false);
+    editor.style.backgroundColor = '#ffffff';
+    triggerAutoSave();
+  }
+
+  // Cambiar tamaño de fuente exacto en puntos (pt)
+  function changeFontSizePt(ptValue) {
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) return;
+    document.execCommand('fontSize', false, '7');
+    const fonts = editor.querySelectorAll('font[size="7"]');
+    fonts.forEach(f => {
+      f.removeAttribute('size');
+      f.style.fontSize = ptValue;
+    });
+    triggerAutoSave();
+  }
+
+  let basePt = 11;
+  function stepFontSize(delta) {
+    basePt = Math.min(48, Math.max(8, basePt + delta));
+    changeFontSizePt(basePt + 'pt');
+  }
+
+  function setLineHeight(val) {
+    editor.style.lineHeight = val;
+    triggerAutoSave();
+  }
+
+  function applyQuickStyle(tag, sizePt, color, italic, cardEl) {
+    document.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
+    if (cardEl) cardEl.classList.add('active');
+    editor.focus();
+    document.execCommand('formatBlock', false, tag);
+    const sel = window.getSelection();
+    if (sel.anchorNode) {
+      const block = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+      if (block && block !== editor) {
+        block.style.fontSize = sizePt;
+        block.style.color = color;
+        block.style.fontStyle = italic ? 'italic' : 'normal';
+      }
+    }
+    triggerAutoSave();
+  }
+
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.ribbon-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function updateToolbarState() {
+    const map = [
+      { id: 'btn-bold', cmd: 'bold' },
+      { id: 'btn-italic', cmd: 'italic' },
+      { id: 'btn-underline', cmd: 'underline' },
+      { id: 'btn-strike', cmd: 'strikeThrough' },
+      { id: 'btn-sub', cmd: 'subscript' },
+      { id: 'btn-sup', cmd: 'superscript' },
+      { id: 'btn-ul', cmd: 'insertUnorderedList' },
+      { id: 'btn-ol', cmd: 'insertOrderedList' },
+      { id: 'btn-left', cmd: 'justifyLeft' },
+      { id: 'btn-center', cmd: 'justifyCenter' },
+      { id: 'btn-right', cmd: 'justifyRight' },
+      { id: 'btn-full', cmd: 'justifyFull' }
+    ];
+    map.forEach(item => {
+      const btn = document.getElementById(item.id);
+      if (btn) {
+        if (document.queryCommandState(item.cmd)) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+    });
+  }
+
+  function updateStats() {
+    const text = editor.innerText.replace(/\u200B/g, '').trim();
+    const words = text === '' ? 0 : text.split(/\s+/).length;
+    wordCountEl.textContent = words + (words === 1 ? ' palabra' : ' palabras');
+  }
+
+  function toggleAutoSave() {
+    autoSaveEnabled = !autoSaveEnabled;
+    const sw = document.getElementById('autosaveSwitch');
+    sw.classList.toggle('on', autoSaveEnabled);
+    saveStatusEl.textContent = autoSaveEnabled ? '✓ Guardado' : 'Autoguardado desactivado';
+  }
+
+  function triggerAutoSave() {
+    const cleanName = docNameInput.value.trim() || 'Documento 1';
+    document.title = cleanName;
+    if (!autoSaveEnabled) return;
+    saveStatusEl.textContent = 'Guardando...';
+    localStorage.setItem('microword_v2_html', editor.innerHTML);
+    localStorage.setItem('microword_v2_name', cleanName);
+    setTimeout(() => { saveStatusEl.textContent = '✓ Guardado'; }, 350);
+  }
+
+  editor.addEventListener('input', () => {
+    ensureParagraphIntegrity();
+    updateStats();
+    triggerAutoSave();
+  });
+  document.addEventListener('selectionchange', updateToolbarState);
+  docNameInput.addEventListener('input', triggerAutoSave);
+
+  // ================= MODAL DE GUARDAR CON NOMBRE (PDF Y DOC) =================
+  function openSaveModal(defaultFormat) {
+    const currentName = docNameInput.value.trim() || 'Documento 1';
+    document.getElementById('modalFileName').value = currentName;
+    document.getElementById('modalFormat').value = defaultFormat;
+    document.getElementById('saveModal').classList.add('open');
+    setTimeout(() => document.getElementById('modalFileName').select(), 80);
+  }
+
+  function closeSaveModal() {
+    document.getElementById('saveModal').classList.remove('open');
+  }
+
+  function confirmSaveFile() {
+    const rawName = document.getElementById('modalFileName').value.trim() || 'Documento 1';
+    const format = document.getElementById('modalFormat').value;
+
+    // Actualizar nombre en la barra superior y en el título del documento
+    docNameInput.value = rawName;
+    document.title = rawName;
+    triggerAutoSave();
+    closeSaveModal();
+
+    if (format === 'pdf') {
+      // Al llamar a window.print() con document.title actualizado, Android y PC guardan el PDF con ese nombre exacto
+      setTimeout(() => {
+        window.print();
+      }, 200);
+    } else {
+      exportAsDoc(rawName);
+    }
+  }
+
+  function exportAsDoc(fileName) {
+    const fullFileName = fileName.endsWith('.doc') ? fileName : fileName + '.doc';
+    const wordHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + fileName + "</title></head><body style='font-family:Calibri,sans-serif;font-size:11pt;'>" + editor.innerHTML + "</body></html>";
+
+    const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fullFileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ================= HERRAMIENTAS DE LAS DEMÁS PESTAÑAS =================
+  async function pasteClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) execCmd('insertText', text);
+    } catch (e) {
+      alert('Mantén presionado sobre la hoja blanca y toca "Pegar".');
+    }
+  }
+
+  function insertTable() {
+    const rows = parseInt(prompt('Número de filas:', '3'), 10);
+    const cols = parseInt(prompt('Número de columnas:', '3'), 10);
+    if (rows > 0 && cols > 0) {
+      let html = '<table><tbody>';
+      for (let r = 0; r < rows; r++) {
+        html += '<tr>';
+        for (let c = 0; c < cols; c++) html += '<td><br></td>';
+        html += '</tr>';
+      }
+      html += '</tbody></table><p><br></p>';
+      execCmd('insertHTML', html);
+    }
+  }
+
+  function insertImageFile(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const imgHtml = '<img src="' + e.target.result + '" style="max-width:100%;height:auto;margin:8px 0;" /><p><br></p>';
+        execCmd('insertHTML', imgHtml);
+      };
+      reader.readAsDataURL(input.files[0]);
+      input.value = '';
+    }
+  }
+
+  function insertLink() {
+    const url = prompt('Dirección del enlace (URL):', 'https://');
+    if (url && url !== 'https://') execCmd('createLink', url);
+  }
+
+  function insertDate() {
+    execCmd('insertText', new Date().toLocaleDateString('es-NI') + ' ');
+  }
+
+  function insertPageBreak() {
+    execCmd('insertHTML', '<hr style="border:none;border-top:2px dashed #C8C6C4;margin:24px 0;"><p><br></p>');
+  }
+
+  let borderActive = false;
+  function togglePageBorder() {
+    borderActive = !borderActive;
+    editor.style.outline = borderActive ? '2px solid #000' : 'none';
+    editor.style.outlineOffset = borderActive ? '-12px' : '0';
+  }
+
+  function setMargins(px) {
+    editor.style.padding = px;
+  }
+
+  function setOrientation(mode) {
+    if (mode === 'landscape') {
+      editor.style.maxWidth = '297mm';
+      editor.style.minHeight = '210mm';
+    } else {
+      editor.style.maxWidth = '210mm';
+      editor.style.minHeight = '297mm';
+    }
+  }
+
+  function insertTOC() {
+    const headings = editor.querySelectorAll('h1, h2, h3');
+    if (headings.length === 0) {
+      alert('Primero aplica estilos de "Título 1" o "Título 2" en tu documento para generar el índice.');
+      return;
+    }
+    let toc = '<div style="background:#F8F8F8;border:1px solid #D2D0CE;padding:12px;margin-bottom:14px;"><b>Contenido</b><ul style="margin-top:6px;padding-left:18px;">';
+    headings.forEach(h => {
+      toc += '<li>' + h.innerText + '</li>';
+    });
+    toc += '</ul></div><p><br></p>';
+    editor.innerHTML = toc + editor.innerHTML;
+    triggerAutoSave();
+  }
+
+  function insertFootnote() {
+    const note = prompt('Texto de la nota al pie:');
+    if (note) {
+      execCmd('insertHTML', '<sup>[1]</sup>');
+      editor.innerHTML += '<hr style="margin-top:24px;"><p style="font-size:9pt;color:#555;">[1] ' + note + '</p>';
+      triggerAutoSave();
+    }
+  }
+
+  function showStats() {
+    const text = editor.innerText.replace(/\u200B/g, '').trim();
+    const words = text === '' ? 0 : text.split(/\s+/).length;
+    const chars = text.length;
+    alert('Estadísticas del documento:\n\n• Palabras: ' + words + '\n• Caracteres: ' + chars);
+  }
+
+  function toggleSpellcheck() {
+    editor.spellcheck = !editor.spellcheck;
+    alert('Corrector ortográfico: ' + (editor.spellcheck ? 'Activado' : 'Desactivado'));
+  }
+
+  function toggleRuler() {
+    const r = document.getElementById('rulerBar');
+    r.style.display = r.style.display === 'none' ? 'flex' : 'none';
+  }
+
+  function findAndReplace() {
+    const find = prompt('Buscar palabra o frase:');
+    if (!find) return;
+    const replace = prompt('Reemplazar "' + find + '" por:', '');
+    if (replace !== null) {
+      editor.innerHTML = editor.innerHTML.split(find).join(replace);
+      triggerAutoSave();
+    }
+  }
+
+  function setZoom(val) {
+    currentZoom = parseInt(val, 10);
+    editor.style.zoom = currentZoom + '%';
+    document.getElementById('zoomSlider').value = currentZoom;
+    document.getElementById('zoomLabel').textContent = currentZoom + '%';
+  }
+
+  function clearDocument() {
+    if (confirm('¿Crear un documento nuevo en blanco? Se borrará el contenido actual.')) {
+      editor.innerHTML = '<p><br></p>';
+      docNameInput.value = 'Documento 1';
+      document.title = 'Documento 1';
+      localStorage.removeItem('microword_v2_html');
+      updateStats();
+    }
+  }
+</script>
+</body>
+</html>
