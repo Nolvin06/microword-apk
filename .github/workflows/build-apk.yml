@@ -38,20 +38,42 @@ jobs:
           mkdir -p assets
           cp www/logo.png assets/icon.png
           cp www/logo.png assets/splash.png
+          npm install --platform=linux --arch=x64 sharp
           npx capacitor-assets generate --android --iconBackgroundColor '#185ABD' --splashBackgroundColor '#185ABD'
           rm -rf android/app/src/main/res/mipmap-anydpi-v26
-          node -e '
-            const fs = require("fs");
-            const p = "android/app/src/main/AndroidManifest.xml";
-            let xml = fs.readFileSync(p, "utf8");
-            const perms = `<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>`;
-            if (!xml.includes("WRITE_EXTERNAL_STORAGE")) {
-              xml = xml.replace("</manifest>", perms + "\n</manifest>");
-            }
-            const intent = `<intent-filter><action android:name="android.intent.action.VIEW"/><action android:name="android.intent.action.EDIT"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="content"/><data android:scheme="file"/><data android:mimeType="application/msword"/><data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/><data android:mimeType="text/plain"/><data android:mimeType="text/html"/></intent-filter></activity>`;
-            xml = xml.replace("</activity>", intent);
-            fs.writeFileSync(p, xml, "utf8");
-          '
+
+          # Inyectar permisos de almacenamiento y el Intent-Filter para abrir .doc / .docx desde WhatsApp
+          python3 - << 'EOF'
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          with open(manifest_path, "r", encoding="utf-8") as f:
+              xml = f.read()
+
+          perms = """
+          <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+          """
+          if "WRITE_EXTERNAL_STORAGE" not in xml:
+              xml = xml.replace("</manifest>", perms + "\n</manifest>")
+
+          intent_filter = """
+              <intent-filter>
+                  <action android:name="android.intent.action.VIEW" />
+                  <action android:name="android.intent.action.EDIT" />
+                  <category android:name="android.intent.category.DEFAULT" />
+                  <category android:name="android.intent.category.BROWSABLE" />
+                  <data android:scheme="content" />
+                  <data android:scheme="file" />
+                  <data android:mimeType="application/msword" />
+                  <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                  <data android:mimeType="text/plain" />
+                  <data android:mimeType="text/html" />
+              </intent-filter>
+          </activity>
+          """
+          xml = xml.replace("</activity>", intent_filter, 1)
+          with open(manifest_path, "w", encoding="utf-8") as f:
+              f.write(xml)
+          EOF
 
       - name: 6. Sincronizar cambios con Android
         run: npx cap copy android
