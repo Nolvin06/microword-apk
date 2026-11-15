@@ -2041,39 +2041,40 @@
   <!-- NOTIFICACIÓN TOAST FLOTANTE -->
   <div id="toast-notification" class="toast-notification">Acción completada</div>
 
-  <script>
+  <!-- CARGAR PUENTE NATIVO DE CAPACITOR -->
+<script src="capacitor.js"></script>
+
+<script>
   /* ==========================================================================
-     MICROWORD NART - MOTOR PRINCIPAL JAVASCRIPT (100% OFFLINE & CAPACITOR READY)
+     MICROWORD NART v3.0 - MOTOR DEFINITIVO (LECTOR .DOCX REAL, PAGINACIÓN Y PDF)
      ========================================================================== */
 
-  // Referencias principales del DOM
   const editor = document.getElementById('editor');
   const docStage = document.getElementById('document-stage');
   const docTitleInput = document.getElementById('doc-title');
   const floatingToolbar = document.getElementById('floating-toolbar');
   const slashMenu = document.getElementById('slash-menu');
 
-  // Estado Global de la Aplicación
   let savedRange = null;
   let autosaveEnabled = true;
   let markdownLiveEnabled = true;
   let formatPainterStyle = null;
-  let pendingImageMode = 'inline'; // 'inline', 'float', 'watermark'
+  let pendingImageMode = 'inline';
   let currentOrientation = 'portrait';
   let currentPaperSize = 'a4';
+  let userZoomPercent = 100;
   let ollamaEndpoint = localStorage.getItem('mw_ollama_url') || 'http://127.0.0.1:11434/api/generate';
   let ollamaModel = localStorage.getItem('mw_ollama_model') || 'llama3.2:1b';
 
-  // Configuración de Tamaños de Hoja (en milímetros)
+  // Dimensiones reales en Milímetros y Píxeles (a 96 DPI: 1mm = 3.7795px)
   const PAPER_DIMENSIONS = {
-    a4:        { w: 210, h: 297, label: 'A4' },
-    letter:    { w: 216, h: 279, label: 'Carta' },
-    legal:     { w: 216, h: 356, label: 'Oficio' },
-    executive: { w: 184, h: 267, label: 'Ejecutivo' },
-    a5:        { w: 148, h: 210, label: 'A5' }
+    a4:        { w: 210, h: 297, pxW: 794, pxH: 1123, label: 'A4' },
+    letter:    { w: 216, h: 279, pxW: 816, pxH: 1054, label: 'Carta' },
+    legal:     { w: 216, h: 356, pxW: 816, pxH: 1346, label: 'Oficio' },
+    executive: { w: 184, h: 267, pxW: 695, pxH: 1009, label: 'Ejecutivo' },
+    a5:        { w: 148, h: 210, pxW: 559, pxH: 794,  label: 'A5' }
   };
 
-  // Configuración de Numeración de Páginas
   let pageNumberConfig = {
     enabled: false,
     start: 1,
@@ -2082,27 +2083,66 @@
     format: 'pageof'
   };
 
-  // Historial Local (Máquina del Tiempo)
   let historySnapshots = [];
 
-  /* ================== 1. INICIALIZACIÓN Y ARRANQUE EN 1 SEGUNDO ================== */
+  /* ================== 1. ARRANQUE E INYECCIÓN DE ESTILOS DE PAGINACIÓN REAL ================== */
   window.addEventListener('DOMContentLoaded', () => {
-    // Forzar uso de estilos CSS modernos en document.execCommand
+    injectPaginationVisualStyles();
     try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
 
     loadLocalDocument();
     loadCustomFontsFromStorage();
     loadHistoryFromStorage();
     initSignatureCanvas();
+    applyPaperDimensions();
     updateDocumentStats();
-    updateFooterPageNumbers();
     setupExternalFileIntentListener();
 
-    // Autoguardado periódico cada 25 segundos
+    window.addEventListener('resize', () => fitPageToMobileScreen());
+
     setInterval(() => {
       if (autosaveEnabled) saveLocalDocument(true);
-    }, 25000);
+    }, 20000);
   });
+
+  // Inyecta líneas divisorias de hojas reales y corrige proporciones móviles
+  function injectPaginationVisualStyles() {
+    const st = document.createElement('style');
+    st.id = 'nart-pagination-patch';
+    st.textContent = `
+      .workspace {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        padding: 14px 6px 60px 6px !important;
+      }
+      .document-stage {
+        width: var(--page-px-w, 794px) !important;
+        max-width: none !important;
+        min-height: var(--page-px-h, 1123px) !important;
+        transform-origin: top center !important;
+        /* Dibujar línea divisoria de página exacta cada vez que se llena una hoja */
+        background-image: repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent calc(var(--page-px-h, 1123px) - 14px),
+          #C8C6C4 calc(var(--page-px-h, 1123px) - 14px),
+          #E1DFDD calc(var(--page-px-h, 1123px) - 2px),
+          #8A8886 var(--page-px-h, 1123px)
+        ) !important;
+      }
+      body.reflow-mode .document-stage {
+        width: 100% !important;
+        min-height: auto !important;
+        background-image: none !important;
+        transform: none !important;
+      }
+    `;
+    document.head.appendChild(st);
+  }
 
   function showToast(msg) {
     const t = document.getElementById('toast-notification');
@@ -2110,10 +2150,10 @@
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(window._toastTimer);
-    window._toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
   }
 
-  /* ================== 2. GESTIÓN DE SELECCIÓN MÓVIL (SOLUCIÓN BUGS #1 y #2) ================== */
+  /* ================== 2. SELECCIÓN PERSISTENTE EN MÓVIL ================== */
   function saveSelection() {
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
@@ -2127,13 +2167,14 @@
   function restoreSelection() {
     editor.focus();
     if (savedRange) {
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(savedRange);
+      try {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+      } catch (e) {}
     }
   }
 
-  // Guardar selección constantemente al interactuar con el lienzo
   editor.addEventListener('keyup', () => {
     saveSelection();
     updateActiveToolbarStates();
@@ -2152,14 +2193,7 @@
     }, 80);
   });
 
-  document.addEventListener('selectionchange', () => {
-    if (document.activeElement === editor) {
-      saveSelection();
-      handleFloatingToolbar();
-    }
-  });
-
-  /* ================== 3. NAVEGACIÓN DE PESTAÑAS Y MODALES ================== */
+  /* ================== 3. PESTAÑAS Y MODALES ================== */
   function switchTab(panelId, btnElem) {
     document.querySelectorAll('.ribbon-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2181,7 +2215,7 @@
     if (m) m.classList.remove('open');
   }
 
-  /* ================== 4. FORMATO DE TEXTO Y FUENTES (BUGS #1 y #2 RESUELTOS) ================== */
+  /* ================== 4. FORMATO DE FUENTE, COLOR Y SOMBREADO SEGURO ================== */
   function execCmd(command, value = null) {
     restoreSelection();
     document.execCommand(command, false, value);
@@ -2190,17 +2224,15 @@
     updateDocumentStats();
   }
 
-  // Aplicar Familia Tipográfica de forma estricta
   function applyFontFamily(fontName) {
     restoreSelection();
     const sel = window.getSelection();
     if (!sel.rangeCount) return;
 
     if (sel.isCollapsed) {
-      // Si no hay texto seleccionado, prepara un span con la fuente para lo que escriba a continuación
       const span = document.createElement('span');
       span.style.fontFamily = fontName;
-      span.innerHTML = '&#8203;'; // Zero-width space
+      span.innerHTML = '&#8203;';
       const range = sel.getRangeAt(0);
       range.insertNode(span);
       range.setStart(span.firstChild, 1);
@@ -2209,7 +2241,6 @@
       sel.addRange(range);
     } else {
       document.execCommand('fontName', false, fontName);
-      // Forzar limpieza en etiquetas <font face="..."> si el navegador las creó
       editor.querySelectorAll('font[face]').forEach(f => {
         const s = document.createElement('span');
         s.style.fontFamily = f.getAttribute('face');
@@ -2221,14 +2252,13 @@
     showToast('Fuente: ' + fontName.replace(/['"]/g, '').split(',')[0]);
   }
 
-  // Aplicar Tamaño Exacto en Puntos (pt) - Solución Bug #2
   function applyFontSizePt(ptValue) {
     const pt = parseFloat(ptValue) || 11;
     restoreSelection();
     const sel = window.getSelection();
     if (!sel.rangeCount) return;
-
     const range = sel.getRangeAt(0);
+
     if (range.collapsed) {
       const span = document.createElement('span');
       span.style.fontSize = pt + 'pt';
@@ -2239,7 +2269,6 @@
       sel.removeAllRanges();
       sel.addRange(range);
     } else {
-      // Truco infalible multiplataforma: aplicar fontSize 7 y reemplazar por span con pt exactos
       document.execCommand('fontSize', false, '7');
       editor.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="-webkit-xxx-large"]').forEach(el => {
         el.removeAttribute('size');
@@ -2254,10 +2283,8 @@
     const selEl = document.getElementById('font-size-select');
     let current = parseInt(selEl.value, 10) || 11;
     let next = Math.min(72, Math.max(8, current + delta));
-    // Ajustar o añadir opción si no existe en el select
     if (![...selEl.options].some(o => Number(o.value) === next)) {
-      const opt = new Option(String(next), String(next));
-      selEl.add(opt);
+      selEl.add(new Option(String(next), String(next)));
     }
     selEl.value = String(next);
     applyFontSizePt(next);
@@ -2269,7 +2296,6 @@
     saveSelection();
   }
 
-  // Resaltador Inteligente (Sólo pinta el texto seleccionado, nunca toda la hoja)
   function applyHighlightColor(color) {
     restoreSelection();
     const sel = window.getSelection();
@@ -2297,19 +2323,31 @@
     }
   }
 
+  // SOLUCIÓN DEL BOTE DE PINTURA: Jamás pinta toda la hoja, solo el párrafo o línea actual
+  function applyParagraphBg(color) {
+    restoreSelection();
+    let block = getCurrentBlockElement();
+    if (!block || block === editor || block === docStage) {
+      document.execCommand('formatBlock', false, 'P');
+      block = getCurrentBlockElement();
+    }
+    if (block && block !== editor) {
+      block.style.backgroundColor = color;
+      block.style.padding = '6px 10px';
+      block.style.borderRadius = '4px';
+      showToast('🪣 Sombreado aplicado al párrafo');
+    } else {
+      showToast('Toca un párrafo de texto primero');
+    }
+  }
+
   function clearSelectionFormatting() {
     restoreSelection();
     document.execCommand('removeFormat', false, null);
-    const sel = window.getSelection();
-    if (sel.rangeCount > 0 && !sel.isCollapsed) {
-      const container = sel.getRangeAt(0).commonAncestorContainer;
-      const el = container.nodeType === 1 ? container : container.parentElement;
-      if (el && el !== editor) {
-        el.style.backgroundColor = '';
-        el.style.fontSize = '';
-        el.style.fontFamily = '';
-        el.style.color = '';
-      }
+    const block = getCurrentBlockElement();
+    if (block && block !== editor) {
+      block.style.backgroundColor = 'transparent';
+      block.style.padding = '';
     }
     saveSelection();
   }
@@ -2322,9 +2360,7 @@
     let txt = sel.toString();
     if (mode === 'upper') txt = txt.toUpperCase();
     else if (mode === 'lower') txt = txt.toLowerCase();
-    else if (mode === 'capitalize') {
-      txt = txt.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-    }
+    else if (mode === 'capitalize') txt = txt.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     document.execCommand('insertText', false, txt);
     saveSelection();
   }
@@ -2333,21 +2369,8 @@
     if (!val) return;
     restoreSelection();
     const block = getCurrentBlockElement();
-    if (block && block !== editor) {
-      block.style.lineHeight = val;
-    } else {
-      editor.style.lineHeight = val;
-    }
-  }
-
-  function applyParagraphBg(color) {
-    restoreSelection();
-    const block = getCurrentBlockElement();
-    if (block && block !== editor) {
-      block.style.backgroundColor = color;
-      block.style.padding = '4px 8px';
-      block.style.borderRadius = '3px';
-    }
+    if (block && block !== editor) block.style.lineHeight = val;
+    else editor.style.lineHeight = val;
   }
 
   function getCurrentBlockElement() {
@@ -2365,62 +2388,54 @@
 
   function applyQuickStyle(styleType) {
     restoreSelection();
-    if (styleType === 'normal') {
-      document.execCommand('formatBlock', false, 'P');
-    } else if (styleType === 'h1') {
-      document.execCommand('formatBlock', false, 'H1');
-    } else if (styleType === 'h2') {
-      document.execCommand('formatBlock', false, 'H2');
-    } else if (styleType === 'quote') {
-      document.execCommand('formatBlock', false, 'BLOCKQUOTE');
-    }
+    const map = { normal: 'P', h1: 'H1', h2: 'H2', quote: 'BLOCKQUOTE' };
+    document.execCommand('formatBlock', false, map[styleType] || 'P');
     saveSelection();
   }
 
   function updateActiveToolbarStates() {
-    const toggleState = (id, cmd) => {
-      const btn = document.getElementById(id);
-      if (!btn) return;
-      try {
-        btn.classList.toggle('active', document.queryCommandState(cmd));
-      } catch (e) {}
+    const map = {
+      'btn-bold': 'bold',
+      'btn-italic': 'italic',
+      'btn-underline': 'underline',
+      'btn-strike': 'strikeThrough',
+      'btn-sub': 'subscript',
+      'btn-sup': 'superscript',
+      'btn-align-left': 'justifyLeft',
+      'btn-align-center': 'justifyCenter',
+      'btn-align-right': 'justifyRight',
+      'btn-align-justify': 'justifyFull'
     };
-    toggleState('btn-bold', 'bold');
-    toggleState('btn-italic', 'italic');
-    toggleState('btn-underline', 'underline');
-    toggleState('btn-strike', 'strikeThrough');
-    toggleState('btn-sub', 'subscript');
-    toggleState('btn-sup', 'superscript');
-    toggleState('btn-align-left', 'justifyLeft');
-    toggleState('btn-align-center', 'justifyCenter');
-    toggleState('btn-align-right', 'justifyRight');
-    toggleState('btn-align-justify', 'justifyFull');
+    Object.keys(map).forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        try { btn.classList.toggle('active', document.queryCommandState(map[id])); } catch (e) {}
+      }
+    });
   }
 
-  /* ================== 5. PORTAPAPELES NATIVO Y COPIAR FORMATO (BUG #4 RESUELTO) ================== */
+  /* ================== 5. PORTAPAPELES NATIVO ================== */
   async function nativeCopy() {
     restoreSelection();
     const sel = window.getSelection();
     const selectedText = sel ? sel.toString() : '';
     if (!selectedText) {
-      showToast('Selecciona texto para copiar');
+      showToast('Selecciona texto primero');
       return;
     }
+    window._internalClipboard = selectedText;
     try {
       if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Clipboard) {
         await Capacitor.Plugins.Clipboard.write({ string: selectedText });
-      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(selectedText);
       } else {
         document.execCommand('copy');
       }
-      window._internalClipboard = selectedText;
-      showToast('📋 Copiado al portapapeles');
     } catch (e) {
       document.execCommand('copy');
-      window._internalClipboard = selectedText;
-      showToast('📋 Copiado');
     }
+    showToast('📋 Copiado');
   }
 
   async function nativeCut() {
@@ -2443,12 +2458,11 @@
     } catch (e) {
       textToPaste = window._internalClipboard || '';
     }
-
     if (textToPaste) {
       document.execCommand('insertText', false, textToPaste);
-      showToast('📋 Texto pegado');
+      showToast('📋 Pegado');
     } else {
-      const manual = prompt('Pega tu texto aquí para insertarlo en la hoja:');
+      const manual = prompt('Pega tu texto aquí:');
       if (manual) document.execCommand('insertText', false, manual);
     }
     saveSelection();
@@ -2460,7 +2474,6 @@
     if (formatPainterStyle) {
       formatPainterStyle = null;
       btn.classList.remove('active');
-      showToast('Copiar formato desactivado');
       return;
     }
     restoreSelection();
@@ -2474,11 +2487,10 @@
       fontWeight: comp.fontWeight,
       fontStyle: comp.fontStyle,
       color: comp.color,
-      backgroundColor: comp.backgroundColor,
-      textDecoration: comp.textDecorationLine
+      backgroundColor: comp.backgroundColor
     };
     btn.classList.add('active');
-    showToast('🖌️ Selecciona otro texto para aplicarle este formato');
+    showToast('🖌️ Selecciona otro texto para pegarle el formato');
   }
 
   editor.addEventListener('mouseup', applyFormatPainterIfNeeded);
@@ -2498,7 +2510,7 @@
     showToast('🖌️ Formato aplicado');
   }
 
-  /* ================== 6. INSTALADOR DE FUENTES CUSTOM (.TTF / .OTF) ================== */
+  /* ================== 6. INSTALADOR DE FUENTES (.TTF / .OTF) ================== */
   function triggerInstallFont() {
     document.getElementById('hidden-font-input').click();
   }
@@ -2509,8 +2521,7 @@
     const fontName = file.name.replace(/\.(ttf|otf|woff2?)$/i, '').replace(/[^a-zA-Z0-9_-]/g, '');
     const reader = new FileReader();
     reader.onload = function(e) {
-      const base64Data = e.target.result;
-      registerCustomFont(fontName, base64Data, true);
+      registerCustomFont(fontName, e.target.result, true);
       applyFontFamily(fontName);
       showToast('✨ Fuente instalada: ' + fontName);
     };
@@ -2519,29 +2530,22 @@
   }
 
   function registerCustomFont(fontName, dataUrl, saveToLocal = false) {
-    // Inyectar @font-face
     const styleEl = document.createElement('style');
     styleEl.textContent = `@font-face { font-family: '${fontName}'; src: url('${dataUrl}'); }`;
     document.head.appendChild(styleEl);
 
-    // Agregar al <select> si no existe
     const optGroup = document.getElementById('custom-fonts-optgroup');
     if (optGroup && ![...optGroup.children].some(o => o.value === fontName)) {
-      const opt = document.createElement('option');
-      opt.value = fontName;
-      opt.textContent = '★ ' + fontName;
+      const opt = new Option('★ ' + fontName, fontName);
       opt.style.fontFamily = fontName;
       optGroup.appendChild(opt);
     }
-
     if (saveToLocal) {
       try {
         const stored = JSON.parse(localStorage.getItem('mw_custom_fonts') || '{}');
         stored[fontName] = dataUrl;
         localStorage.setItem('mw_custom_fonts', JSON.stringify(stored));
-      } catch (err) {
-        showToast('Fuente cargada para esta sesión (archivo grande)');
-      }
+      } catch (err) {}
     }
   }
 
@@ -2552,11 +2556,10 @@
     } catch (e) {}
   }
 
-  /* ================== 7. ELEMENTOS DE INSERCIÓN (TABLAS, IMÁGENES, FIRMAS, CÓDIGO, FECHA) ================== */
+  /* ================== 7. INSERCIÓN DE PÁGINAS, TABLAS, IMÁGENES, FIRMAS Y CÓDIGO ================== */
   function insertBlankPage() {
     restoreSelection();
-    const html = `<div class="visual-page-break" contenteditable="false"></div><p><br></p>`;
-    document.execCommand('insertHTML', false, html);
+    document.execCommand('insertHTML', false, `<div class="visual-page-break" contenteditable="false"></div><p><br></p>`);
     updateDocumentStats();
   }
 
@@ -2564,26 +2567,19 @@
     insertBlankPage();
   }
 
-  // Tablas
   function confirmInsertTable() {
     const rows = parseInt(document.getElementById('table-rows-input').value, 10) || 3;
     const cols = parseInt(document.getElementById('table-cols-input').value, 10) || 3;
     const hasHeader = document.getElementById('table-header-chk').checked;
-
     let html = '<table><tbody>';
     for (let r = 0; r < rows; r++) {
       html += '<tr>';
       for (let c = 0; c < cols; c++) {
-        if (r === 0 && hasHeader) {
-          html += `<th>Encabezado ${c + 1}</th>`;
-        } else {
-          html += `<td><br></td>`;
-        }
+        html += (r === 0 && hasHeader) ? `<th>Columna ${c + 1}</th>` : `<td><br></td>`;
       }
       html += '</tr>';
     }
     html += '</tbody></table><p><br></p>';
-
     closeModal('modal-table');
     restoreSelection();
     document.execCommand('insertHTML', false, html);
@@ -2593,25 +2589,20 @@
     restoreSelection();
     const sel = window.getSelection();
     if (!sel.rangeCount) return;
-    let node = sel.anchorNode;
-    let td = null, tr = null, table = null;
+    let node = sel.anchorNode, td = null, tr = null, table = null;
     while (node && node !== editor) {
       if (node.tagName === 'TD' || node.tagName === 'TH') td = node;
       if (node.tagName === 'TR') tr = node;
       if (node.tagName === 'TABLE') { table = node; break; }
       node = node.parentNode;
     }
-    if (!table) {
-      showToast('Toca primero dentro de una celda de la tabla');
-      return;
-    }
+    if (!table) { showToast('Toca dentro de una tabla primero'); return; }
     if (action === 'addRow' && tr) {
-      const newRow = tr.cloneNode(true);
-      newRow.querySelectorAll('td, th').forEach(c => c.innerHTML = '<br>');
-      tr.parentNode.insertBefore(newRow, tr.nextSibling);
+      const nr = tr.cloneNode(true);
+      nr.querySelectorAll('td, th').forEach(c => c.innerHTML = '<br>');
+      tr.parentNode.insertBefore(nr, tr.nextSibling);
     } else if (action === 'delRow' && tr) {
-      if (table.rows.length > 1) tr.remove();
-      else table.remove();
+      if (table.rows.length > 1) tr.remove(); else table.remove();
     } else if (action === 'addCol') {
       [...table.rows].forEach((row, idx) => {
         const cell = document.createElement(idx === 0 && row.querySelector('th') ? 'th' : 'td');
@@ -2619,14 +2610,11 @@
         row.appendChild(cell);
       });
     } else if (action === 'delCol' && td) {
-      const colIdx = td.cellIndex;
-      [...table.rows].forEach(row => {
-        if (row.cells[colIdx]) row.deleteCell(colIdx);
-      });
+      const ci = td.cellIndex;
+      [...table.rows].forEach(row => { if (row.cells[ci]) row.deleteCell(ci); });
     }
   }
 
-  // Imágenes Inmunes (En línea, Flotantes y Marca de Agua)
   function triggerInsertImage(mode) {
     pendingImageMode = mode || 'inline';
     document.getElementById('hidden-image-input').click();
@@ -2639,18 +2627,14 @@
     reader.onload = function(e) {
       const src = e.target.result;
       if (pendingImageMode === 'watermark') {
-        const wmLayer = document.getElementById('doc-watermark-layer');
-        wmLayer.innerHTML = `<img src="${src}" class="watermark-img-item" />`;
-        showToast('💧 Imagen puesta como Marca de Agua');
+        document.getElementById('doc-watermark-layer').innerHTML = `<img src="${src}" class="watermark-img-item" />`;
+        showToast('💧 Marca de agua aplicada');
       } else if (pendingImageMode === 'float') {
         restoreSelection();
-        const html = `<span class="doc-img-float-wrap" contenteditable="false" style="width:160px;"><img src="${src}" /></span>`;
-        document.execCommand('insertHTML', false, html);
-        showToast('🚀 Imagen flotante insertada');
+        document.execCommand('insertHTML', false, `<span class="doc-img-float-wrap" contenteditable="false" style="width:180px;"><img src="${src}" /></span>`);
       } else {
         restoreSelection();
-        const html = `<img src="${src}" class="doc-img-inline" />`;
-        document.execCommand('insertHTML', false, html);
+        document.execCommand('insertHTML', false, `<img src="${src}" class="doc-img-inline" />`);
       }
     };
     reader.readAsDataURL(file);
@@ -2660,20 +2644,15 @@
   function insertShape(type) {
     if (!type) return;
     restoreSelection();
-    let html = '';
-    if (type === 'hr') {
-      html = '<hr style="border:none; border-top:2px solid #185ABD; margin:10px 0;" /><p><br></p>';
-    } else if (type === 'box') {
-      html = '<div style="border:2px solid #185ABD; background:#F3F9FF; padding:10px; border-radius:4px; margin:8px 0;">Escribe dentro del cuadro...</div><p><br></p>';
-    } else if (type === 'circle') {
-      html = '<div style="width:90px; height:90px; border:3px solid #185ABD; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; text-align:center; font-weight:bold; font-size:10pt; margin:6px;">SELLO</div>';
-    } else if (type === 'arrow') {
-      html = '<span style="font-size:20pt; color:#185ABD; font-weight:bold;"> &#10140; </span>';
-    }
-    document.execCommand('insertHTML', false, html);
+    const shapes = {
+      hr: '<hr style="border:none; border-top:2px solid #185ABD; margin:10px 0;" /><p><br></p>',
+      box: '<div style="border:2px solid #185ABD; background:#F3F9FF; padding:10px; border-radius:4px; margin:8px 0;">Cuadro de texto editable...</div><p><br></p>',
+      circle: '<div style="width:90px; height:90px; border:3px solid #185ABD; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; margin:6px;">SELLO</div>',
+      arrow: '<span style="font-size:20pt; color:#185ABD; font-weight:bold;"> &#10140; </span>'
+    };
+    if (shapes[type]) document.execCommand('insertHTML', false, shapes[type]);
   }
 
-  // Firma Digital en Pantalla
   let sigCanvas, sigCtx, isDrawingSig = false;
   function initSignatureCanvas() {
     sigCanvas = document.getElementById('signature-canvas');
@@ -2681,15 +2660,12 @@
     sigCtx = sigCanvas.getContext('2d');
     sigCtx.lineWidth = 2.4;
     sigCtx.lineCap = 'round';
-    sigCtx.lineJoin = 'round';
-
     const getPos = (e) => {
       const rect = sigCanvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return { x: clientX - rect.left, y: clientY - rect.top };
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: cx - rect.left, y: cy - rect.top };
     };
-
     const start = (e) => {
       e.preventDefault();
       isDrawingSig = true;
@@ -2706,7 +2682,6 @@
       sigCtx.stroke();
     };
     const end = () => { isDrawingSig = false; };
-
     sigCanvas.addEventListener('mousedown', start);
     sigCanvas.addEventListener('mousemove', move);
     window.addEventListener('mouseup', end);
@@ -2724,62 +2699,42 @@
     const dataUrl = sigCanvas.toDataURL('image/png');
     closeModal('modal-signature');
     restoreSelection();
-    const html = `<div style="display:inline-block; text-align:center; margin:8px 0;" contenteditable="false">
-      <img src="${dataUrl}" style="max-width:170px; height:auto; display:block; border-bottom:1px solid #333;" />
-      <span style="font-size:9pt; color:#555;">Firma Autorizada</span>
-    </div><p><br></p>`;
-    document.execCommand('insertHTML', false, html);
+    document.execCommand('insertHTML', false, `<div style="display:inline-block;text-align:center;margin:8px 0;" contenteditable="false"><img src="${dataUrl}" style="max-width:170px;border-bottom:1px solid #333;display:block;" /><span style="font-size:9pt;color:#555;">Firma</span></div><p><br></p>`);
     clearSignaturePad();
-    showToast('✍️ Firma insertada');
   }
 
-  // Bloques de Código con Coloreado de Sintaxis Básico
   function confirmInsertCodeBlock() {
     const lang = document.getElementById('code-lang-select').value;
     const rawCode = document.getElementById('code-content-input').value;
     if (!rawCode.trim()) return;
-
-    const escaped = rawCode
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    // Coloreado ligero de palabras clave
-    const highlighted = escaped
-      .replace(/\b(function|const|let|var|return|if|else|for|while|import|from|def|class|SELECT|FROM|WHERE|INSERT|UPDATE)\b/g, '<span style="color:#569CD6;font-weight:bold;">$1</span>')
-      .replace(/(['"`].*?['"`])/g, '<span style="color:#CE9178;">$1</span>')
-      .replace(/(\/\/.*|#.*)/g, '<span style="color:#6A9955;">$1</span>');
-
-    const html = `<pre class="code-block" data-lang="${lang}"><code>${highlighted}</code></pre><p><br></p>`;
+    const esc = rawCode.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const hi = esc
+      .replace(/\b(function|const|let|var|return|if|else|for|while|import|from|def|class|SELECT|FROM|WHERE)\b/g, '<span style="color:#569CD6;font-weight:bold;">$1</span>')
+      .replace(/(['"`].*?['"`])/g, '<span style="color:#CE9178;">$1</span>');
     closeModal('modal-code');
     document.getElementById('code-content-input').value = '';
     restoreSelection();
-    document.execCommand('insertHTML', false, html);
+    document.execCommand('insertHTML', false, `<pre class="code-block" data-lang="${lang}"><code>${hi}</code></pre><p><br></p>`);
   }
 
   function insertHyperlink() {
     restoreSelection();
-    const url = prompt('Introduce la dirección web (URL):', 'https://');
-    if (url && url !== 'https://') {
-      document.execCommand('createLink', false, url);
-    }
+    const url = prompt('URL del enlace:', 'https://');
+    if (url && url !== 'https://') document.execCommand('createLink', false, url);
   }
 
-  // Fecha y Hora con Selector de Formato (Bug #5 Resuelto)
   function populateDateTimeModal() {
     const select = document.getElementById('datetime-format-select');
     select.innerHTML = '';
     const now = new Date();
-    const opts = [
+    [
       now.toLocaleDateString('es-NI', { day: '2-digit', month: '2-digit', year: 'numeric' }),
       now.toLocaleDateString('es-NI', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-      now.toLocaleDateString('es-NI', { day: 'numeric', month: 'short', year: 'numeric' }),
       now.toLocaleDateString('es-NI') + ' ' + now.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' }),
-      now.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    ];
-    opts.forEach((txt, idx) => {
+      now.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' })
+    ].forEach((txt, i) => {
       const o = new Option(txt, txt);
-      if (idx === 0) o.selected = true;
+      if (i === 0) o.selected = true;
       select.add(o);
     });
   }
@@ -2787,39 +2742,27 @@
   function confirmInsertDateTime() {
     const val = document.getElementById('datetime-format-select').value;
     closeModal('modal-datetime');
-    if (val) {
-      restoreSelection();
-      document.execCommand('insertText', false, val + ' ');
-    }
+    if (val) { restoreSelection(); document.execCommand('insertText', false, val + ' '); }
   }
 
   function insertSymbol(sym) {
-    if (!sym) return;
-    restoreSelection();
-    document.execCommand('insertText', false, sym);
+    if (sym) { restoreSelection(); document.execCommand('insertText', false, sym); }
   }
 
-  /* ================== 8. ENCABEZADO, PIE Y NUMERACIÓN POR RANGOS ================== */
+  /* ================== 8. ENCABEZADO, PIE Y NUMERACIÓN ================== */
   function toggleHeaderFooterEdit(zone) {
-    const headerEl = document.getElementById('doc-header-band');
-    const footerEl = document.getElementById('footer-custom-text');
-    const target = zone === 'header' ? headerEl : footerEl;
-    const isEditing = target.getAttribute('contenteditable') === 'true';
-
-    headerEl.setAttribute('contenteditable', 'false');
-    footerEl.setAttribute('contenteditable', 'false');
-
-    if (!isEditing) {
+    const h = document.getElementById('doc-header-band');
+    const f = document.getElementById('footer-custom-text');
+    const target = zone === 'header' ? h : f;
+    const isEd = target.getAttribute('contenteditable') === 'true';
+    h.setAttribute('contenteditable', 'false');
+    f.setAttribute('contenteditable', 'false');
+    if (!isEd) {
       target.setAttribute('contenteditable', 'true');
       target.focus();
-      showToast(zone === 'header' ? 'Editando encabezado (toca la hoja al terminar)' : 'Editando pie de página');
+      showToast('Editando ' + (zone === 'header' ? 'encabezado' : 'pie de página'));
     }
   }
-
-  editor.addEventListener('focus', () => {
-    document.getElementById('doc-header-band').setAttribute('contenteditable', 'false');
-    document.getElementById('footer-custom-text').setAttribute('contenteditable', 'false');
-  });
 
   function applyPageNumberConfig() {
     pageNumberConfig = {
@@ -2831,33 +2774,22 @@
     };
     closeModal('modal-pagenumbers');
     updateFooterPageNumbers();
-    showToast('🔢 Numeración de página actualizada');
   }
 
   function updateFooterPageNumbers() {
-    const footerNumEl = document.getElementById('footer-page-number');
-    if (!footerNumEl) return;
-    if (!pageNumberConfig.enabled) {
-      footerNumEl.textContent = '';
-      return;
-    }
-    const totalPages = getEstimatedPageCount();
-    const startP = pageNumberConfig.start;
-    const endP = pageNumberConfig.end > 0 ? Math.min(totalPages, pageNumberConfig.end) : totalPages;
-
-    footerNumEl.style.textAlign = pageNumberConfig.align;
-    let rangeInfo = (startP > 1 || pageNumberConfig.end > 0) ? ` (Págs. activas: ${startP} a ${endP})` : '';
-
-    if (pageNumberConfig.format === 'simple') {
-      footerNumEl.textContent = `${startP}${rangeInfo}`;
-    } else if (pageNumberConfig.format === 'dashes') {
-      footerNumEl.textContent = `- ${startP} -${rangeInfo}`;
-    } else {
-      footerNumEl.textContent = `Página ${startP} de ${endP}${rangeInfo}`;
-    }
+    const el = document.getElementById('footer-page-number');
+    if (!el) return;
+    if (!pageNumberConfig.enabled) { el.textContent = ''; return; }
+    const total = getEstimatedPageCount();
+    const s = pageNumberConfig.start;
+    const e = pageNumberConfig.end > 0 ? Math.min(total, pageNumberConfig.end) : total;
+    el.style.textAlign = pageNumberConfig.align;
+    if (pageNumberConfig.format === 'simple') el.textContent = `${s}`;
+    else if (pageNumberConfig.format === 'dashes') el.textContent = `- ${s} -`;
+    else el.textContent = `Página ${s} de ${e}`;
   }
 
-  /* ================== 9. DISPOSICIÓN DE HOJA (TAMAÑOS, MÁRGENES, VERTICAL/HORIZONTAL - BUG #6 RESUELTO) ================== */
+  /* ================== 9. TAMAÑO DE PAPEL Y ORIENTACIÓN REAL (VERTICAL/HORIZONTAL) ================== */
   function setPageMargins(mmVal) {
     document.documentElement.style.setProperty('--page-padding', mmVal);
     showToast('📏 Margen: ' + mmVal);
@@ -2865,37 +2797,58 @@
 
   function setPageOrientation(orient) {
     currentOrientation = orient;
-    document.getElementById('btn-orient-portrait').classList.toggle('active', orient === 'portrait');
-    document.getElementById('btn-orient-landscape').classList.toggle('active', orient === 'landscape');
+    document.getElementById('btn-orient-portrait')?.classList.toggle('active', orient === 'portrait');
+    document.getElementById('btn-orient-landscape')?.classList.toggle('active', orient === 'landscape');
     applyPaperDimensions();
-    showToast(orient === 'landscape' ? '🖼️ Hoja en Horizontal' : '📄 Hoja en Vertical');
+    showToast(orient === 'landscape' ? '🖼️ Hoja Horizontal Aplicada' : '📄 Hoja Vertical Aplicada');
   }
 
   function setPaperSize(sizeKey) {
     currentPaperSize = sizeKey;
     applyPaperDimensions();
+    showToast('📐 Tamaño: ' + (PAPER_DIMENSIONS[sizeKey]?.label || sizeKey));
   }
 
   function applyPaperDimensions() {
     const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
-    const widthMm = currentOrientation === 'landscape' ? spec.h : spec.w;
-    const heightMm = currentOrientation === 'landscape' ? spec.w : spec.h;
+    const isLand = currentOrientation === 'landscape';
+    const wMm = isLand ? spec.h : spec.w;
+    const hMm = isLand ? spec.w : spec.h;
+    const pxW = isLand ? spec.pxH : spec.pxW;
+    const pxH = isLand ? spec.pxW : spec.pxH;
 
-    document.documentElement.style.setProperty('--page-width', widthMm + 'mm');
-    document.documentElement.style.setProperty('--page-height', heightMm + 'mm');
+    document.documentElement.style.setProperty('--page-width', wMm + 'mm');
+    document.documentElement.style.setProperty('--page-height', hMm + 'mm');
+    document.documentElement.style.setProperty('--page-px-w', pxW + 'px');
+    document.documentElement.style.setProperty('--page-px-h', pxH + 'px');
 
-    // Actualizar regla @page dinámica para exportación PDF
-    let printStyle = document.getElementById('dynamic-page-print-style');
-    if (!printStyle) {
-      printStyle = document.createElement('style');
-      printStyle.id = 'dynamic-page-print-style';
-      document.head.appendChild(printStyle);
-    }
-    printStyle.textContent = `@media print { @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; } }`;
+    const orientLabel = isLand ? 'Horizontal' : 'Vertical';
+    const infoEl = document.getElementById('status-PaperInfo');
+    if (infoEl) infoEl.textContent = `${spec.label} ${orientLabel}`;
 
-    const orientLabel = currentOrientation === 'landscape' ? 'Horizontal' : 'Vertical';
-    document.getElementById('status-PaperInfo').textContent = `${spec.label} ${orientLabel}`;
+    fitPageToMobileScreen();
     updateDocumentStats();
+  }
+
+  // Ajusta proporcionalmente la hoja A4/Oficio/Carta al ancho de la pantalla del teléfono
+  function fitPageToMobileScreen() {
+    if (document.body.classList.contains('reflow-mode')) {
+      docStage.style.transform = 'none';
+      docStage.style.marginBottom = '20px';
+      return;
+    }
+    const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
+    const isLand = currentOrientation === 'landscape';
+    const pagePxW = isLand ? spec.pxH : spec.pxW;
+
+    const screenW = window.innerWidth - 16;
+    const autoScale = Math.min(1, screenW / pagePxW);
+    const finalScale = autoScale * (userZoomPercent / 100);
+
+    docStage.style.transform = `scale(${finalScale})`;
+    // Compensar espacio inferior cuando se escala con transform
+    const scaledDiff = docStage.offsetHeight * (1 - finalScale);
+    docStage.style.marginBottom = `-${Math.max(0, Math.floor(scaledDiff - 30))}px`;
   }
 
   function setPageColumns(cols) {
@@ -2912,55 +2865,44 @@
   }
 
   function promptTextWatermark() {
-    const txt = prompt('Escribe el texto de la Marca de Agua (deja vacío para quitar):', 'CONFIDENCIAL');
-    const wmLayer = document.getElementById('doc-watermark-layer');
+    const txt = prompt('Texto de la Marca de Agua (vacío para quitar):', 'BORRADOR');
     if (txt === null) return;
-    if (!txt.trim()) {
-      wmLayer.innerHTML = '';
-      showToast('Marca de agua eliminada');
-    } else {
-      wmLayer.innerHTML = `<div class="watermark-text-item">${txt}</div>`;
-      showToast('🔤 Marca de agua aplicada');
-    }
+    document.getElementById('doc-watermark-layer').innerHTML = txt.trim()
+      ? `<div class="watermark-text-item">${txt}</div>`
+      : '';
   }
 
-  /* ================== 10. VISTAS MÓVILES, CORRECTOR (BUG #7) Y MARKDOWN VIVO ================== */
+  /* ================== 10. MODOS MÓVILES Y MARKDOWN VIVO ================== */
   function toggleThumbMode() {
     const active = document.body.classList.toggle('thumb-mode');
     document.getElementById('btn-thumb-mode')?.classList.toggle('active', active);
-    showToast(active ? '👇 Modo Pulgar Activado (Barras abajo)' : '👆 Barras en posición superior');
+    showToast(active ? '👇 Modo Pulgar Activado' : '👆 Barras Arriba');
   }
 
   function toggleDarkMode() {
     const active = document.body.classList.toggle('dark-mode');
     document.getElementById('btn-dark-mode')?.classList.toggle('active', active);
-    showToast(active ? '🌙 Modo Oscuro Puro Activado' : '☀️ Modo Claro Activado');
+    showToast(active ? '🌙 Modo Oscuro Puro' : '☀️ Modo Claro');
   }
 
   function toggleZenMode() {
-    const active = document.body.classList.toggle('zen-mode');
-    if (active) showToast('🧘 Modo Enfoque Zen');
+    document.body.classList.toggle('zen-mode');
+    fitPageToMobileScreen();
   }
 
   function toggleReflowMode() {
     const active = document.body.classList.toggle('reflow-mode');
     document.getElementById('btn-reflow-mode')?.classList.toggle('active', active);
-    showToast(active ? '📱 Modo Lectura Móvil Activado' : '📄 Vista de Página Real');
+    fitPageToMobileScreen();
+    showToast(active ? '📱 Modo Lectura (Texto adaptado a tu pantalla)' : '📄 Vista de Hoja Impresa Real');
   }
 
-  // Solución Bug #7: Indicador visual claro de Corrector Ortográfico
   function toggleSpellcheck() {
-    const current = editor.getAttribute('spellcheck') === 'true';
-    const next = !current;
+    const next = editor.getAttribute('spellcheck') !== 'true';
     editor.setAttribute('spellcheck', String(next));
-    const btn = document.getElementById('btn-spellcheck');
-    const txt = document.getElementById('spellcheck-state-txt');
-    btn.classList.toggle('active', next);
-    txt.textContent = next ? 'ACTIVO' : 'INACTIVO';
-    // Forzar refresco en Android WebView
-    const tmp = editor.innerHTML;
-    editor.innerHTML = tmp;
-    showToast(next ? '✔️ Corrector Ortográfico ACTIVADO' : '✕ Corrector Ortográfico DESACTIVADO');
+    document.getElementById('btn-spellcheck')?.classList.toggle('active', next);
+    document.getElementById('spellcheck-state-txt').textContent = next ? 'ACTIVO' : 'INACTIVO';
+    showToast(next ? '✔️ Corrector Activo' : '✕ Corrector Desactivado');
   }
 
   function toggleMarkdownLive() {
@@ -2970,7 +2912,6 @@
     btn.textContent = markdownLiveEnabled ? '⚡ Markdown Vivo: ON' : '⚡ Markdown Vivo: OFF';
   }
 
-  // Menú Contextual Flotante y Slash (/)
   function handleFloatingToolbar() {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
@@ -2984,16 +2925,12 @@
     }
     const rect = range.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) return;
-
     floatingToolbar.style.display = 'flex';
-    const topPos = Math.max(10, rect.top - 46);
-    const leftPos = Math.min(window.innerWidth - 260, Math.max(8, rect.left));
-    floatingToolbar.style.top = topPos + 'px';
-    floatingToolbar.style.left = leftPos + 'px';
+    floatingToolbar.style.top = Math.max(10, rect.top - 48) + 'px';
+    floatingToolbar.style.left = Math.min(window.innerWidth - 260, Math.max(8, rect.left)) + 'px';
   }
 
   editor.addEventListener('keyup', (e) => {
-    // Comando Slash (/)
     if (e.key === '/') {
       const sel = window.getSelection();
       if (sel.rangeCount) {
@@ -3005,29 +2942,11 @@
     } else if (e.key === 'Escape' || e.key === ' ') {
       slashMenu.style.display = 'none';
     }
-
-    // Atajos Markdown en vivo al presionar Espacio
-    if (markdownLiveEnabled && e.key === ' ') {
-      const block = getCurrentBlockElement();
-      if (!block) return;
-      const text = block.textContent;
-      if (text.startsWith('# ')) {
-        block.textContent = text.slice(2);
-        document.execCommand('formatBlock', false, 'H1');
-      } else if (text.startsWith('## ')) {
-        block.textContent = text.slice(3);
-        document.execCommand('formatBlock', false, 'H2');
-      } else if (text.startsWith('> ')) {
-        block.textContent = text.slice(2);
-        document.execCommand('formatBlock', false, 'BLOCKQUOTE');
-      }
-    }
   });
 
   function executeSlashCommand(cmd) {
     slashMenu.style.display = 'none';
     restoreSelection();
-    // Borrar la barra '/' recién escrita
     document.execCommand('delete', false, null);
     if (cmd === 'h1') applyQuickStyle('h1');
     else if (cmd === 'h2') applyQuickStyle('h2');
@@ -3040,7 +2959,7 @@
     else if (cmd === 'pagebreak') insertPageBreak();
   }
 
-  /* ================== 11. GUARDADO, EXPORTACIÓN NATIVA Y COMPARTIR (BUG #3 RESUELTO) ================== */
+  /* ================== 11. GUARDAR Y EXPORTAR REAL EN EL TELÉFONO (SOLUCIÓN DEFINITIVA) ================== */
   function openSaveModal(defaultFormat = 'pdf') {
     document.getElementById('save-filename-input').value = docTitleInput.value || 'Documento1';
     document.getElementById('save-format-select').value = defaultFormat;
@@ -3054,68 +2973,64 @@
     docTitleInput.value = fileNameBase;
     closeModal('modal-save');
 
-    if (format === 'pdf') {
-      await exportNativePDF(false, shouldShare);
-    } else if (format === 'pdf-light') {
-      await exportNativePDF(true, shouldShare);
-    } else if (format === 'doc') {
-      await exportWordDoc(shouldShare, isAnon);
-    } else if (format === 'jpg') {
-      await exportLongImage(shouldShare);
-    } else if (format === 'html') {
-      const content = buildStandaloneHTML(isAnon);
-      await saveOrShareFileNative(`${fileNameBase}.html`, content, 'text/html', false, shouldShare);
+    if (format === 'pdf') await exportNativePDF(false, shouldShare);
+    else if (format === 'pdf-light') await exportNativePDF(true, shouldShare);
+    else if (format === 'doc') await exportWordDoc(shouldShare, isAnon);
+    else if (format === 'jpg') await exportLongImage(shouldShare);
+    else if (format === 'html') {
+      await saveOrShareFileNative(`${fileNameBase}.html`, buildStandaloneHTML(isAnon, false), 'text/html', false, shouldShare);
     } else if (format === 'txt') {
-      const txt = editor.innerText;
-      await saveOrShareFileNative(`${fileNameBase}.txt`, txt, 'text/plain', false, shouldShare);
+      await saveOrShareFileNative(`${fileNameBase}.txt`, editor.innerText, 'text/plain', false, shouldShare);
     }
   }
 
-  // Motor universal para Guardar o Compartir en Android usando @capacitor/filesystem y @capacitor/share
+  // Guarda en Documentos/Descargas de Android y abre el selector nativo si es necesario
   async function saveOrShareFileNative(fullFileName, dataContent, mimeType, isBase64Data = false, shareImmediately = false) {
-    try {
-      const hasCapFS = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Filesystem;
-      if (hasCapFS) {
-        const { Filesystem, Share } = Capacitor.Plugins;
-        const base64Payload = isBase64Data ? dataContent : utf8ToBase64(dataContent);
+    const base64Payload = isBase64Data ? dataContent : utf8ToBase64(dataContent);
 
-        // Guardar en carpeta Documents del teléfono
-        const writeRes = await Filesystem.writeFile({
+    if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Filesystem) {
+      const { Filesystem, Share } = Capacitor.Plugins;
+      let savedUri = null;
+
+      // Intentar guardar primero en DOCUMENTS, y si Android 13+ pide ruta alterna, en CACHE para compartir/guardar
+      try {
+        const resDoc = await Filesystem.writeFile({
           path: fullFileName,
           data: base64Payload,
           directory: 'DOCUMENTS',
           recursive: true
         });
+        savedUri = resDoc.uri;
+        showToast(`✅ Guardado en carpeta Documentos: ${fullFileName}`);
+      } catch (errDoc) {
+        try {
+          const resCache = await Filesystem.writeFile({
+            path: fullFileName,
+            data: base64Payload,
+            directory: 'CACHE'
+          });
+          savedUri = resCache.uri;
+        } catch (errCache) {
+          console.error('Error Filesystem:', errCache);
+        }
+      }
 
-        showToast(`✅ Guardado en Documentos: ${fullFileName}`);
-
-        if (shareImmediately && Share) {
+      if (savedUri && Share && (shareImmediately || !savedUri.includes('Documents'))) {
+        try {
           await Share.share({
             title: fullFileName,
-            text: `Documento generado con MicroWord NART`,
-            url: writeRes.uri,
-            dialogTitle: 'Compartir documento con...'
+            text: fullFileName,
+            url: savedUri,
+            dialogTitle: shareImmediately ? 'Enviar documento a...' : 'Guardar o abrir archivo con...'
           });
-        }
-        return;
+          return;
+        } catch (sErr) {}
       }
-    } catch (capErr) {
-      console.warn('Fallback web activado:', capErr);
+      if (savedUri) return;
     }
 
-    // Fallback para Navegador Web o si requiere compartir vía Web Share API
-    const blob = isBase64Data
-      ? base64ToBlob(dataContent, mimeType)
-      : new Blob([dataContent], { type: mimeType });
-
-    if (shareImmediately && navigator.canShare) {
-      const fileObj = new File([blob], fullFileName, { type: mimeType });
-      if (navigator.canShare({ files: [fileObj] })) {
-        await navigator.share({ title: fullFileName, files: [fileObj] });
-        return;
-      }
-    }
-
+    // Fallback Web
+    const blob = isBase64Data ? base64ToBlob(dataContent, mimeType) : new Blob([dataContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -3124,7 +3039,7 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(`⬇ Descargado: ${fullFileName}`);
+    showToast(`⬇ Archivo generado: ${fullFileName}`);
   }
 
   function utf8ToBase64(str) {
@@ -3143,7 +3058,6 @@
     return new Blob(byteArrays, { type: contentType });
   }
 
-  // Exportar a Word (.DOC) Compatible con MS Word y WhatsApp
   async function exportWordDoc(shareDirect = false, anonymous = true) {
     const name = (docTitleInput.value || 'Documento1').trim() + '.doc';
     const htmlDoc = buildStandaloneHTML(anonymous, true);
@@ -3151,10 +3065,13 @@
   }
 
   function buildStandaloneHTML(anonymous = true, isWordMime = false) {
+    const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
+    const isLand = currentOrientation === 'landscape';
+    const wMm = isLand ? spec.h : spec.w;
+    const hMm = isLand ? spec.w : spec.h;
     const headerTxt = document.getElementById('doc-header-band').innerHTML;
     const footerTxt = document.getElementById('footer-custom-text').innerHTML;
     const footerNum = document.getElementById('footer-page-number').innerHTML;
-    const metaAuthor = anonymous ? '' : '<meta name="author" content="MicroWord NART">';
 
     const wordXmlns = isWordMime
       ? `xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'`
@@ -3163,253 +3080,395 @@
     return `<html ${wordXmlns}>
       <head>
         <meta charset="utf-8">
-        ${metaAuthor}
         <title>${anonymous ? 'Documento' : docTitleInput.value}</title>
         <style>
+          @page Section1 { size: ${wMm}mm ${hMm}mm; mso-page-orientation: ${currentOrientation}; margin: 20mm; }
+          div.Section1 { page: Section1; }
           body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #000; }
           table { width: 100%; border-collapse: collapse; margin: 10px 0; }
           td, th { border: 1px solid #666; padding: 6px; }
-          blockquote { border-left: 4px solid #185ABD; padding-left: 10px; font-style: italic; }
-          pre { background: #f4f4f4; padding: 10px; font-family: Consolas, monospace; }
         </style>
       </head>
       <body>
-        ${headerTxt ? `<div style="color:#666;font-size:9pt;margin-bottom:15px;">${headerTxt}</div>` : ''}
-        ${editor.innerHTML}
-        ${(footerTxt || footerNum) ? `<div style="color:#666;font-size:9pt;margin-top:20px;border-top:1px solid #ccc;padding-top:6px;">${footerTxt} <div>${footerNum}</div></div>` : ''}
+        <div class="Section1">
+          ${headerTxt ? `<div style="color:#666;font-size:9pt;margin-bottom:12px;">${headerTxt}</div>` : ''}
+          ${editor.innerHTML}
+          ${(footerTxt || footerNum) ? `<div style="color:#666;font-size:9pt;margin-top:20px;border-top:1px solid #ccc;padding-top:6px;">${footerTxt} <div>${footerNum}</div></div>` : ''}
+        </div>
       </body>
     </html>`;
   }
 
-  // Exportar a PDF (con compresor de imágenes opcional y respaldo en Android)
-  async function exportNativePDF(compressImages = false, shareDirect = false) {
-    if (compressImages) {
-      showToast('⚡ Comprimiendo imágenes para PDF ligero...');
-      await compressAllDocumentImages(0.55, 900);
+  // Renderizador Canvas 100% Nativo (Convierte el documento en Imagen Larga JPG sin fallar en Android WebView)
+  async function renderDocumentToCanvas(scaleFactor = 1.5) {
+    const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
+    const isLand = currentOrientation === 'landscape';
+    const width = isLand ? spec.pxH : spec.pxW;
+    const pad = 55;
+    const textContent = editor.innerText || '';
+    const lines = textContent.split('\n');
+
+    // Medir altura real necesaria
+    const estHeight = Math.max(isLand ? spec.pxW : spec.pxH, lines.length * 28 + 180);
+    const canvas = document.createElement('canvas');
+    canvas.width = width * scaleFactor;
+    canvas.height = estHeight * scaleFactor;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scaleFactor, scaleFactor);
+
+    // Fondo de papel
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, estHeight);
+
+    // Encabezado
+    const headerStr = document.getElementById('doc-header-band').innerText.trim();
+    if (headerStr) {
+      ctx.fillStyle = '#666666';
+      ctx.font = '12px Calibri, Arial, sans-serif';
+      ctx.fillText(headerStr, pad, 34);
     }
 
-    // Intentar abrir el diálogo de impresión nativo de Android/Navegador
-    const wasReflow = document.body.classList.contains('reflow-mode');
-    if (wasReflow) document.body.classList.remove('reflow-mode');
+    // Dibujar bloques y párrafos del editor respetando alineación y tamaños
+    let cursorY = pad + 20;
+    const maxLineW = width - pad * 2;
+    const blocks = editor.children.length > 0 ? [...editor.children] : [editor];
 
-    try {
-      window.print();
-    } catch (e) {}
+    for (const block of blocks) {
+      if (block.tagName === 'IMG' || block.querySelector?.('img')) {
+        const imgEl = block.tagName === 'IMG' ? block : block.querySelector('img');
+        if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+          const drawW = Math.min(maxLineW, 380);
+          const drawH = (imgEl.naturalHeight / imgEl.naturalWidth) * drawW;
+          try {
+            ctx.drawImage(imgEl, pad, cursorY, drawW, drawH);
+            cursorY += drawH + 16;
+          } catch (e) {}
+        }
+      }
 
-    if (wasReflow) document.body.classList.add('reflow-mode');
+      const txt = block.innerText || '';
+      if (!txt.trim()) { cursorY += 18; continue; }
 
-    // Si el usuario pidió compartir directo en Android, también generamos versión lista para enviar
-    if (shareDirect) {
-      await exportWordDoc(true, true);
+      const comp = window.getComputedStyle(block);
+      const fontSizePx = parseFloat(comp.fontSize) || 15;
+      const isBold = comp.fontWeight === 'bold' || parseInt(comp.fontWeight, 10) >= 600 || ['H1', 'H2'].includes(block.tagName);
+      const isItalic = comp.fontStyle === 'italic';
+      ctx.font = `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}${fontSizePx}px Calibri, Arial, sans-serif`;
+      ctx.fillStyle = comp.color && comp.color !== 'rgb(232, 232, 232)' ? comp.color : '#000000';
+
+      const subLines = txt.split('\n');
+      for (const sLine of subLines) {
+        const words = sLine.split(' ');
+        let currentLine = '';
+        for (let n = 0; n < words.length; n++) {
+          const testLine = currentLine + words[n] + ' ';
+          if (ctx.measureText(testLine).width > maxLineW && n > 0) {
+            ctx.fillText(currentLine, pad, cursorY);
+            currentLine = words[n] + ' ';
+            cursorY += fontSizePx * 1.45;
+          } else {
+            currentLine = testLine;
+          }
+        }
+        ctx.fillText(currentLine, pad, cursorY);
+        cursorY += fontSizePx * 1.55;
+      }
+      cursorY += 6;
     }
+
+    // Pie de página
+    const footerNum = document.getElementById('footer-page-number').innerText.trim();
+    if (footerNum) {
+      ctx.fillStyle = '#555555';
+      ctx.font = '12px Calibri, Arial, sans-serif';
+      ctx.fillText(footerNum, width / 2 - 35, estHeight - 25);
+    }
+
+    return canvas;
   }
 
-  async function compressAllDocumentImages(quality = 0.6, maxWidth = 1000) {
-    const imgs = editor.querySelectorAll('img');
-    for (const img of imgs) {
-      if (!img.src.startsWith('data:image')) continue;
-      await new Promise((resolve) => {
-        const temp = new Image();
-        temp.onload = () => {
-          const scale = Math.min(1, maxWidth / temp.width);
-          const canvas = document.createElement('canvas');
-          canvas.width = temp.width * scale;
-          canvas.height = temp.height * scale;
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(temp, 0, 0, canvas.width, canvas.height);
-          img.src = canvas.toDataURL('image/jpeg', quality);
-          resolve();
-        };
-        temp.onerror = resolve;
-        temp.src = img.src;
-      });
-    }
-  }
-
-  // Exportar como Imagen Larga Continua (.JPG) 100% Offline usando SVG ForeignObject + Canvas
   async function exportLongImage(shareDirect = false) {
-    showToast('🖼️ Generando Imagen Larga JPG...');
-    const fileName = (docTitleInput.value || 'Documento1').trim() + '.jpg';
-    const width = 794; // Ancho A4 en px a 96 DPI
-    const contentHeight = Math.max(1123, docStage.scrollHeight + 80);
-
-    const clonedStage = docStage.cloneNode(true);
-    clonedStage.style.background = '#FFFFFF';
-    clonedStage.style.color = '#000000';
-    clonedStage.style.width = width + 'px';
-    clonedStage.style.minHeight = contentHeight + 'px';
-    clonedStage.style.padding = '40px';
-    clonedStage.style.boxSizing = 'border-box';
-
-    const svgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${contentHeight}">
-        <foreignObject width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Calibri,Arial,sans-serif;background:#fff;color:#000;width:${width}px;height:${contentHeight}px;">
-            ${clonedStage.outerHTML}
-          </div>
-        </foreignObject>
-      </svg>`;
-
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-
-    const img = new Image();
-    img.onload = async () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = contentHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, width, contentHeight);
-      ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
-
-      const jpgDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    showToast('🖼️ Generando Imagen JPG del documento...');
+    try {
+      const canvas = await renderDocumentToCanvas(1.5);
+      const jpgDataUrl = canvas.toDataURL('image/jpeg', 0.90);
       const base64Clean = jpgDataUrl.split(',')[1];
+      const fileName = (docTitleInput.value || 'Documento1').trim() + '.jpg';
       await saveOrShareFileNative(fileName, base64Clean, 'image/jpeg', true, shareDirect);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      showToast('Guardando vista alternativa...');
-      exportWordDoc(shareDirect);
-    };
-    img.src = url;
+    } catch (e) {
+      showToast('Error al crear imagen: ' + e.message);
+    }
+  }
+
+  // Generador de archivo PDF Binario Real 100% Offline (para que se guarde como .pdf real en Android)
+  async function exportNativePDF(compressImages = false, shareDirect = false) {
+    showToast('📕 Creando archivo PDF real...');
+    try {
+      const scale = compressImages ? 1.0 : 1.6;
+      const quality = compressImages ? 0.55 : 0.88;
+      const canvas = await renderDocumentToCanvas(scale);
+      const jpgDataUrl = canvas.toDataURL('image/jpeg', quality);
+      const jpegBytes = atob(jpgDataUrl.split(',')[1]);
+
+      const pdfBytesString = buildMinimalPdfWithJpeg(jpegBytes, canvas.width, canvas.height);
+      const pdfBase64 = window.btoa(pdfBytesString);
+      const fileName = (docTitleInput.value || 'Documento1').trim() + '.pdf';
+
+      await saveOrShareFileNative(fileName, pdfBase64, 'application/pdf', true, shareDirect);
+    } catch (err) {
+      window.print();
+    }
+  }
+
+  // Empaqueta un JPEG dentro de un contenedor PDF 1.4 estándar válido sin librerías externas
+  function buildMinimalPdfWithJpeg(jpegBinaryStr, imgW, imgH) {
+    const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
+    const isLand = currentOrientation === 'landscape';
+    const pdfW = Math.round((isLand ? spec.h : spec.w) * 2.83465); // mm a puntos PDF (72 DPI)
+    const pdfH = Math.round((isLand ? spec.w : spec.h) * 2.83465);
+
+    const objects = [];
+    objects.push(`1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`);
+    objects.push(`2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`);
+    objects.push(`3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << /XObject << /Im1 4 0 R >> >> /MediaBox [0 0 ${pdfW} ${pdfH}] /Contents 5 0 R >>\nendobj\n`);
+    objects.push(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBinaryStr.length} >>\nstream\n${jpegBinaryStr}\nendstream\nendobj\n`);
+    const contentStream = `q\n${pdfW} 0 0 ${pdfH} 0 0 cm\n/Im1 Do\nQ\n`;
+    objects.push(`5 0 obj\n<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\nendobj\n`);
+
+    let pdf = `%PDF-1.4\n`;
+    const offsets = [0];
+    for (const obj of objects) {
+      offsets.push(pdf.length);
+      pdf += obj;
+    }
+    const xrefStart = pdf.length;
+    pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+    for (let i = 1; i < offsets.length; i++) {
+      pdf += String(offsets[i]).padStart(10, '0') + ` 00000 n \n`;
+    }
+    pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+    return pdf;
   }
 
   function shareDocumentDirect(type) {
-    if (type === 'pdf') exportLongImage(true);
+    if (type === 'pdf') exportNativePDF(false, true);
     else exportWordDoc(true, true);
   }
 
   function quickNativeShare() {
-    exportWordDoc(true, true);
+    exportNativePDF(false, true);
   }
 
-  /* ================== 12. ABRIR ARCHIVOS LOCALES Y DESDE WHATSAPP (INTENTS) ================== */
+  /* ================== 12. DESCOMPRESOR NATIVO DE ARCHIVOS .DOCX (SOLUCIÓN SÍMBOLOS PK!) ================== */
   function createNewDocument() {
     if (editor.innerText.trim().length > 0) {
-      if (!confirm('¿Crear un documento nuevo en blanco? Se guardará una copia en el historial local.')) return;
+      if (!confirm('¿Crear un documento nuevo en blanco?')) return;
       saveSnapshotManual();
     }
     editor.innerHTML = '<p><br></p>';
     docTitleInput.value = 'Documento1';
     updateDocumentStats();
-    showToast('📄 Lienzo nuevo listo');
   }
 
   function triggerOpenFile() {
     document.getElementById('hidden-file-open').click();
   }
 
-  function handleFileOpen(event) {
+  async function handleFileOpen(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (!confirm(`¿Deseas abrir y habilitar la edición para "${file.name}"?`)) return;
-
     docTitleInput.value = file.name.replace(/\.[^/.]+$/, '');
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target.result;
-      loadExternalContentIntoEditor(content, file.name);
-    };
-    reader.readAsText(file);
+    showToast('📂 Abriendo ' + file.name + '...');
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      // Si empieza con 'PK' (0x50, 0x4B), es un archivo .DOCX comprimido en ZIP
+      if (bytes[0] === 0x50 && bytes[1] === 0x4B) {
+        const htmlExtracted = await extractDocxFromZipBuffer(buffer);
+        editor.innerHTML = htmlExtracted;
+        updateDocumentStats();
+        showToast('✅ Documento Word (.docx) cargado');
+      } else {
+        const text = new TextDecoder('utf-8').decode(bytes);
+        loadExternalContentIntoEditor(text, file.name);
+      }
+    } catch (err) {
+      showToast('Error al leer archivo: ' + err.message);
+    }
     event.target.value = '';
   }
 
+  // Descompresor ZIP en JS puro usando DecompressionStream('deflate-raw') nativo de Android WebView
+  async function extractDocxFromZipBuffer(arrayBuffer) {
+    const view = new DataView(arrayBuffer);
+    const bytes = new Uint8Array(arrayBuffer);
+    let offset = 0;
+
+    while (offset + 30 < bytes.length) {
+      // Buscar firma Local File Header (0x04034b50)
+      if (view.getUint32(offset, true) !== 0x04034b50) {
+        offset++;
+        continue;
+      }
+      const compressionMethod = view.getUint16(offset + 8, true);
+      const compressedSize = view.getUint32(offset + 18, true);
+      const fileNameLen = view.getUint16(offset + 26, true);
+      const extraFieldLen = view.getUint16(offset + 28, true);
+
+      const fileName = new TextDecoder().decode(bytes.subarray(offset + 30, offset + 30 + fileNameLen));
+      const dataStart = offset + 30 + fileNameLen + extraFieldLen;
+
+      if (fileName === 'word/document.xml') {
+        // Encontrar el tamaño real o el siguiente header PK si usa Data Descriptor
+        let compEnd = dataStart + compressedSize;
+        if (compressedSize === 0) {
+          compEnd = bytes.length;
+          for (let j = dataStart; j < bytes.length - 4; j++) {
+            if (bytes[j] === 0x50 && bytes[j+1] === 0x4B && (bytes[j+2] === 0x03 || bytes[j+2] === 0x01 || bytes[j+2] === 0x07)) {
+              compEnd = j;
+              break;
+            }
+          }
+        }
+        const slice = bytes.subarray(dataStart, compEnd);
+        let xmlString = '';
+
+        if (compressionMethod === 0) {
+          xmlString = new TextDecoder('utf-8').decode(slice);
+        } else if (compressionMethod === 8 && 'DecompressionStream' in window) {
+          const ds = new DecompressionStream('deflate-raw');
+          const writer = ds.writable.getWriter();
+          writer.write(slice).catch(() => {});
+          writer.close().catch(() => {});
+          const reader = ds.readable.getReader();
+          const chunks = [];
+          while (true) {
+            try {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value) chunks.push(value);
+            } catch (e) { break; }
+          }
+          const totalLen = chunks.reduce((acc, c) => acc + c.length, 0);
+          const merged = new Uint8Array(totalLen);
+          let pos = 0;
+          for (const c of chunks) { merged.set(c, pos); pos += c.length; }
+          xmlString = new TextDecoder('utf-8').decode(merged);
+        }
+
+        if (xmlString) {
+          return parseWordXmlToHtml(xmlString);
+        }
+      }
+      offset = dataStart + Math.max(1, compressedSize);
+    }
+    return '<p>No se encontró texto editable en este archivo .docx.</p>';
+  }
+
+  function parseWordXmlToHtml(xmlStr) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlStr, 'application/xml');
+    const paragraphs = xmlDoc.getElementsByTagName('w:p');
+    let htmlOut = '';
+
+    for (let i = 0; i < paragraphs.length; i++) {
+      const pNode = paragraphs[i];
+      const texts = pNode.getElementsByTagName('w:t');
+      let pText = '';
+      for (let j = 0; j < texts.length; j++) {
+        pText += texts[j].textContent;
+      }
+      if (pText.trim()) {
+        htmlOut += `<p>${pText}</p>`;
+      } else {
+        htmlOut += `<p><br></p>`;
+      }
+    }
+    return htmlOut || '<p><br></p>';
+  }
+
   function loadExternalContentIntoEditor(rawText, fileName = '') {
-    if (rawText.includes('<body') || rawText.includes('<p') || rawText.includes('<div')) {
+    if (rawText.includes('<body') || rawText.includes('<p')) {
       const bodyMatch = rawText.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
       editor.innerHTML = bodyMatch ? bodyMatch[1] : rawText;
     } else {
-      const paragraphs = rawText.split(/\r?\n/).map(line => `<p>${line || '<br>'}</p>`).join('');
-      editor.innerHTML = paragraphs;
+      editor.innerHTML = rawText.split(/\r?\n/).map(line => `<p>${line || '<br>'}</p>`).join('');
     }
     updateDocumentStats();
-    scanAndPromptMagicVariablesAuto();
-    showToast(`📂 Archivo abierto: ${fileName || 'Documento'}`);
+    showToast(`📂 Archivo cargado: ${fileName}`);
   }
 
-  // Listener para cuando el usuario abre un archivo .doc desde WhatsApp ("Abrir con MicroWord")
   function setupExternalFileIntentListener() {
     if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) {
       Capacitor.Plugins.App.addListener('appUrlOpen', async (data) => {
         if (data && data.url) {
-          if (!confirm('Has abierto un documento externo. ¿Deseas cargarlo y permitir su edición en MicroWord?')) return;
           try {
             const { Filesystem } = Capacitor.Plugins;
             const fileRead = await Filesystem.readFile({ path: data.url });
-            const decoded = decodeURIComponent(escape(window.atob(fileRead.data)));
-            loadExternalContentIntoEditor(decoded, 'Archivo de WhatsApp');
+            const binaryStr = window.atob(fileRead.data);
+            const bytes = new Uint8Array(binaryStr.length);
+            for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+            if (bytes[0] === 0x50 && bytes[1] === 0x4B) {
+              editor.innerHTML = await extractDocxFromZipBuffer(bytes.buffer);
+            } else {
+              loadExternalContentIntoEditor(new TextDecoder('utf-8').decode(bytes), 'Documento Externo');
+            }
+            showToast('📂 Documento de WhatsApp abierto');
           } catch (err) {
-            showToast('Usa el botón Abrir Archivo para seleccionar el documento');
+            showToast('Toca Abrir Archivo para cargarlo');
           }
         }
       });
     }
   }
 
-  /* ================== 13. AUTOGUARDADO Y MÁQUINA DEL TIEMPO (HISTORIAL LOCAL) ================== */
+  /* ================== 13. AUTOGUARDADO Y MÁQUINA DEL TIEMPO ================== */
   function toggleAutosave(checked) {
     autosaveEnabled = checked;
-    document.getElementById('status-save-indicator').textContent = checked ? '✓ Autoguardado ON' : '⏸ Autoguardado OFF';
+    document.getElementById('status-save-indicator').textContent = checked ? '✓ Autoguardado ON' : '⏸ OFF';
   }
 
-  function updateDocTitle(val) {
-    saveLocalDocument(true);
-  }
+  function updateDocTitle(val) { saveLocalDocument(true); }
 
   function saveLocalDocument(silent = false) {
     try {
       localStorage.setItem('mw_current_html', editor.innerHTML);
       localStorage.setItem('mw_current_title', docTitleInput.value);
-      localStorage.setItem('mw_header_html', document.getElementById('doc-header-band').innerHTML);
-      localStorage.setItem('mw_footer_html', document.getElementById('footer-custom-text').innerHTML);
       document.getElementById('status-save-indicator').textContent = '✓ Guardado ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      if (!silent) showToast('💾 Guardado en memoria local');
+      if (!silent) showToast('💾 Guardado en memoria');
     } catch (e) {}
   }
 
   function loadLocalDocument() {
     const savedHtml = localStorage.getItem('mw_current_html');
     const savedTitle = localStorage.getItem('mw_current_title');
-    if (savedHtml) editor.innerHTML = savedHtml;
+    if (savedHtml && !savedHtml.startsWith('<p>PK!')) editor.innerHTML = savedHtml;
     if (savedTitle) docTitleInput.value = savedTitle;
-    document.getElementById('doc-header-band').innerHTML = localStorage.getItem('mw_header_html') || '';
-    document.getElementById('footer-custom-text').innerHTML = localStorage.getItem('mw_footer_html') || '';
   }
 
   function saveSnapshotManual() {
     saveLocalDocument(false);
-    const snap = {
+    historySnapshots.push({
       time: new Date().toLocaleString('es-NI'),
       title: docTitleInput.value,
       html: editor.innerHTML
-    };
-    historySnapshots.push(snap);
+    });
     if (historySnapshots.length > 20) historySnapshots.shift();
-    try {
-      localStorage.setItem('mw_history_snaps', JSON.stringify(historySnapshots));
-    } catch (e) {}
-    showToast('🕒 Versión guardada en la Máquina del Tiempo');
+    try { localStorage.setItem('mw_history_snaps', JSON.stringify(historySnapshots)); } catch (e) {}
+    showToast('🕒 Versión guardada en el Historial');
   }
 
   function loadHistoryFromStorage() {
-    try {
-      historySnapshots = JSON.parse(localStorage.getItem('mw_history_snaps') || '[]');
-    } catch (e) {
-      historySnapshots = [];
-    }
+    try { historySnapshots = JSON.parse(localStorage.getItem('mw_history_snaps') || '[]'); }
+    catch (e) { historySnapshots = []; }
   }
 
   function refreshHistoryModalUI() {
     const slider = document.getElementById('history-slider');
-    const label = document.getElementById('history-info-label');
-    const preview = document.getElementById('history-preview-box');
-    if (historySnapshots.length === 0) {
-      saveSnapshotManual();
-    }
+    if (historySnapshots.length === 0) saveSnapshotManual();
     slider.max = Math.max(0, historySnapshots.length - 1);
     slider.value = slider.max;
     previewHistorySnapshot(slider.value);
@@ -3418,7 +3477,7 @@
   function previewHistorySnapshot(idx) {
     const snap = historySnapshots[idx];
     if (!snap) return;
-    document.getElementById('history-info-label').textContent = `Versión (${ Number(idx) + 1 }/${ historySnapshots.length }): ${snap.time}`;
+    document.getElementById('history-info-label').textContent = `Versión (${Number(idx) + 1}/${historySnapshots.length}): ${snap.time}`;
     document.getElementById('history-preview-box').innerHTML = snap.html;
   }
 
@@ -3427,18 +3486,19 @@
     const snap = historySnapshots[idx];
     if (snap) {
       editor.innerHTML = snap.html;
-      docTitleInput.value = snap.title || docTitleInput.value;
       closeModal('modal-history');
       updateDocumentStats();
-      showToast('⏪ Versión restaurada con éxito');
+      showToast('⏪ Versión recuperada');
     }
   }
 
-  /* ================== 14. REVISIÓN, ESTADÍSTICAS, ZOOM Y BUSCAR/REEMPLAZAR ================== */
+  /* ================== 14. ESTADÍSTICAS, ZOOM Y BUSCAR ================== */
   function getEstimatedPageCount() {
-    const Breaks = editor.querySelectorAll('.visual-page-break').length;
-    const heightPages = Math.max(1, Math.ceil(editor.scrollHeight / 1050));
-    return Math.max(heightPages, Breaks + 1);
+    const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
+    const pageH = currentOrientation === 'landscape' ? spec.pxW : spec.pxH;
+    const manualBreaks = editor.querySelectorAll('.visual-page-break').length;
+    const heightPages = Math.max(1, Math.ceil(editor.scrollHeight / (pageH - 120)));
+    return Math.max(heightPages, manualBreaks + 1);
   }
 
   function updateDocumentStats() {
@@ -3453,88 +3513,63 @@
   function showDocumentStats() {
     const text = editor.innerText;
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-    const charsWithSpaces = text.length;
-    const charsNoSpaces = text.replace(/\s+/g, '').length;
-    const paragraphs = editor.querySelectorAll('p, h1, h2, li').length;
-    alert(`📊 Estadísticas del Documento:\n\n• Páginas: ${getEstimatedPageCount()}\n• Palabras: ${words}\n• Caracteres (con espacios): ${charsWithSpaces}\n• Caracteres (sin espacios): ${charsNoSpaces}\n• Párrafos/Líneas: ${paragraphs}`);
+    alert(`📊 Estadísticas:\n• Páginas: ${getEstimatedPageCount()}\n• Palabras: ${words}\n• Caracteres: ${text.length}`);
   }
 
   function setDocumentZoom(val) {
-    const scale = parseInt(val, 10) / 100;
-    docStage.style.transform = `scale(${scale})`;
-    document.getElementById('zoom-label').textContent = val + '%';
-    document.getElementById('zoom-slider').value = val;
+    userZoomPercent = parseInt(val, 10) || 100;
+    document.getElementById('zoom-label').textContent = userZoomPercent + '%';
+    document.getElementById('zoom-slider').value = userZoomPercent;
+    fitPageToMobileScreen();
   }
 
   function stepZoom(delta) {
-    const current = parseInt(document.getElementById('zoom-slider').value, 10) || 100;
-    const next = Math.min(150, Math.max(50, current + delta));
-    setDocumentZoom(next);
+    setDocumentZoom(Math.min(150, Math.max(50, userZoomPercent + delta)));
   }
 
   function executeFindAndReplace() {
-    const findStr = document.getElementById('find-input').value;
-    const repStr = document.getElementById('replace-input').value;
-    if (!findStr) return;
-    const regex = new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    editor.innerHTML = editor.innerHTML.replace(regex, repStr);
+    const f = document.getElementById('find-input').value;
+    const r = document.getElementById('replace-input').value;
+    if (!f) return;
+    const reg = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    editor.innerHTML = editor.innerHTML.replace(reg, r);
     closeModal('modal-find');
-    showToast('🔍 Reemplazo completado');
+    showToast('🔍 Reemplazado');
   }
 
-  /* ================== 15. VARIABLES MÁGICAS {{CAMPOS}} E IA LOCAL OFFLINE ================== */
+  /* ================== 15. CORRECTOR DE IA LOCAL CON DICCIONARIO ESPAÑOL OFFLINE ================== */
   function insertMagicVariablePrompt() {
     restoreSelection();
-    const name = prompt('Nombre de la Variable Mágica (ej. Nombre, Fecha, Cliente):', 'Nombre');
+    const name = prompt('Nombre de Variable (ej. Nombre, Fecha):', 'Nombre');
     if (name && name.trim()) {
-      const clean = name.trim().replace(/[{}]/g, '');
-      document.execCommand('insertHTML', false, `<span class="magic-var-tag">{{${clean}}}</span>&nbsp;`);
+      document.execCommand('insertHTML', false, `<span class="magic-var-tag">{{${name.trim()}}}</span>&nbsp;`);
     }
   }
 
   function scanAndFillMagicVariables() {
-    const html = editor.innerHTML;
-    const matches = [...html.matchAll(/\{\{([^{}]+)\}\}/g)];
-    const uniqueVars = [...new Set(matches.map(m => m[1].trim()))];
-    if (uniqueVars.length === 0) {
-      showToast('No hay variables {{Campo}} en el documento. Inserta una primero.');
-      return;
-    }
+    const matches = [...editor.innerHTML.matchAll(/\{\{([^{}]+)\}\}/g)];
+    const unique = [...new Set(matches.map(m => m[1].trim()))];
+    if (unique.length === 0) { showToast('No hay variables {{...}} en la hoja'); return; }
     const container = document.getElementById('magic-vars-container');
-    container.innerHTML = '';
-    uniqueVars.forEach(v => {
-      container.innerHTML += `
-        <div>
-          <label class="modal-label">Valor para {{${v}}}:</label>
-          <input type="text" class="modal-input magic-var-input" data-varname="${v}" placeholder="Escribe ${v}..." />
-        </div>`;
-    });
+    container.innerHTML = unique.map(v => `
+      <div>
+        <label class="modal-label">Valor para {{${v}}}:</label>
+        <input type="text" class="modal-input magic-var-input" data-varname="${v}" />
+      </div>`).join('');
     openModal('modal-variables');
   }
 
-  function scanAndPromptMagicVariablesAuto() {
-    if (/\{\{[^{}]+\}\}/.test(editor.innerHTML)) {
-      setTimeout(() => scanAndFillMagicVariables(), 400);
-    }
-  }
-
   function applyMagicVariables() {
-    const inputs = document.querySelectorAll('.magic-var-input');
     let html = editor.innerHTML;
-    inputs.forEach(inp => {
-      const varName = inp.getAttribute('data-varname');
-      const val = inp.value;
-      if (val) {
-        const reg = new RegExp(`\\{\\{\\s*${varName}\\s*\\}\\}`, 'g');
-        html = html.replace(reg, val);
-      }
+    document.querySelectorAll('.magic-var-input').forEach(inp => {
+      const v = inp.getAttribute('data-varname');
+      if (inp.value) html = html.replace(new RegExp(`\\{\\{\\s*${v}\\s*\\}\\}`, 'g'), inp.value);
     });
     editor.innerHTML = html;
     closeModal('modal-variables');
-    showToast('🪄 Plantilla autocompletada');
+    showToast('🪄 Variables completadas');
   }
 
-  // Escáner OCR (Cámara + Extracción de Texto)
   function triggerCameraOCR() {
     document.getElementById('hidden-ocr-input').click();
   }
@@ -3542,47 +3577,17 @@
   async function handleOcrCapture(event) {
     const file = event.target.files[0];
     if (!file) return;
-    showToast('📷 Analizando imagen capturada...');
-
-    // Si el navegador soporta TextDetector nativo de Android/Chrome
-    if ('TextDetector' in window) {
-      try {
-        const bitmap = await createImageBitmap(file);
-        const detector = new window.TextDetector();
-        const texts = await detector.detect(bitmap);
-        const extracted = texts.map(t => t.rawValue).join('\n');
-        if (extracted.trim()) {
-          restoreSelection();
-          document.execCommand('insertText', false, extracted);
-          showToast('✨ Texto extraído con éxito');
-          return;
-        }
-      } catch (e) {}
-    }
-
-    // Si no tiene motor OCR nativo, inserta la foto de la pizarra/libro con opción de transcripción
     const reader = new FileReader();
     reader.onload = (e) => {
       restoreSelection();
-      document.execCommand('insertHTML', false, `<img src="${e.target.result}" class="doc-img-inline" /><p><i>[Nota de captura insertada]</i></p>`);
-      showToast('📷 Captura insertada en el documento');
+      document.execCommand('insertHTML', false, `<img src="${e.target.result}" class="doc-img-inline" />`);
     };
     reader.readAsDataURL(file);
-    event.target.value = '';
   }
 
-  // Asistente IA Local (Conexión con Ollama en Android o Motor Offline Integrado)
   function configureOllamaUrl() {
-    const url = prompt('URL local de Ollama/GGUF:', ollamaEndpoint);
-    if (url) {
-      ollamaEndpoint = url.trim();
-      localStorage.setItem('mw_ollama_url', ollamaEndpoint);
-    }
-    const mod = prompt('Nombre del modelo local (ej. llama3.2:1b, qwen2.5:0.5b):', ollamaModel);
-    if (mod) {
-      ollamaModel = mod.trim();
-      localStorage.setItem('mw_ollama_model', ollamaModel);
-    }
+    const u = prompt('URL de Ollama Local:', ollamaEndpoint);
+    if (u) { ollamaEndpoint = u.trim(); localStorage.setItem('mw_ollama_url', ollamaEndpoint); }
   }
 
   function openAiQuickMenu() {
@@ -3593,72 +3598,90 @@
   async function runLocalAI() {
     restoreSelection();
     const sel = window.getSelection();
-    const selectedText = (sel && !sel.isCollapsed) ? sel.toString() : editor.innerText;
-    if (!selectedText.trim()) {
-      showToast('Escribe o selecciona texto primero');
+    const hasSelection = sel && !sel.isCollapsed && sel.toString().trim().length > 0;
+    const targetText = hasSelection ? sel.toString() : editor.innerText;
+
+    if (!targetText.trim()) {
+      showToast('Escribe texto primero para corregirlo');
       return;
     }
 
     const action = document.getElementById('select-ai-action').value;
-    showToast('🤖 Procesando con IA Local...');
+    showToast('🤖 Corrigiendo texto...');
 
-    let systemPrompt = 'Corrige la ortografía y mejora la redacción en español sin explicaciones adicionales: ';
-    if (action === 'formal') systemPrompt = 'Reescribe este texto con un tono altamente profesional, ejecutivo y formal en español: ';
-    else if (action === 'summarize') systemPrompt = 'Resume los puntos clave de este texto en español de forma concisa: ';
-    else if (action === 'expand') systemPrompt = 'Desarrolla y amplía esta idea con más detalle y estructura profesional en español: ';
-
-    try {
-      const response = await fetch(ollamaEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: ollamaModel,
-          prompt: systemPrompt + '\n\n' + selectedText,
-          stream: false
-        })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.response) {
-          replaceSelectedOrInsertText(data.response.trim());
-          showToast('✨ Texto mejorado con Ollama Local');
-          return;
-        }
-      }
-    } catch (err) {
-      // Fallback: Motor de Corrección y Formato Heurístico 100% Interno si Ollama está apagado
-      const processed = runBuiltInSmartProcessor(selectedText, action);
-      replaceSelectedOrInsertText(processed);
-      showToast('✨ Procesado con motor inteligente integrado');
+    const corrected = runSpanishOfflineCorrector(targetText, action);
+    if (hasSelection) {
+      document.execCommand('insertText', false, corrected);
+    } else {
+      editor.innerHTML = corrected.split('\n').map(l => `<p>${l || '<br>'}</p>`).join('');
     }
+    showToast('✨ Ortografía y estilo corregidos');
   }
 
-  function runBuiltInSmartProcessor(text, action) {
-    let clean = text.replace(/\s+/g, ' ').trim();
-    // Capitalizar inicio de oraciones y limpiar puntuación
-    clean = clean.replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
-    if (!/[.!?]$/.test(clean)) clean += '.';
+  // Corrector Ortográfico y Gramatical Offline en Español (Corrige "ola", "nonbre", "xq", tildes y formalidad)
+  function runSpanishOfflineCorrector(text, action) {
+    const dict = {
+      '\\bola\\b': 'Hola',
+      '\\bnonbre\\b': 'nombre',
+      '\\btonces\\b': 'entonces',
+      '\\bxq\\b': 'porque',
+      '\\bx\\b': 'por',
+      '\\bq\\b': 'que',
+      '\\bke\\b': 'que',
+      '\\bhagregar\\b': 'agregar',
+      '\\bhagregue\\b': 'agregué',
+      '\\bapollado\\b': 'apoyado',
+      '\\bconsidan\\b': 'coincidan',
+      '\\bscritp\\b': 'script',
+      '\\bscrip\\b': 'script',
+      '\\belejir\\b': 'elegir',
+      '\\bdeveria\\b': 'debería',
+      '\\bdeberia\\b': 'debería',
+      '\\bhabia\\b': 'había',
+      '\\btambien\\b': 'también',
+      '\\bdespues\\b': 'después',
+      '\\bademas\\b': 'además',
+      '\\basi\\b': 'así',
+      '\\bmas\\b': 'más',
+      '\\bcodigo\\b': 'código',
+      '\\bpagina\\b': 'página',
+      '\\bnumero\\b': 'número',
+      '\\bversion\\b': 'versión',
+      '\\bfuncion\\b': 'función',
+      '\\bcaracteres\\b': 'caracteres'
+    };
+
+    let out = text;
+    Object.keys(dict).forEach(pattern => {
+      const reg = new RegExp(pattern, 'gi');
+      out = out.replace(reg, (match) => {
+        const rep = dict[pattern];
+        // Conservar mayúscula inicial si la palabra original la tenía
+        if (match[0] === match[0].toUpperCase()) {
+          return rep.charAt(0).toUpperCase() + rep.slice(1);
+        }
+        return rep;
+      });
+    });
+
+    // Regla ortográfica española: cambiar "nb" por "mb" y "np" por "mp" en cualquier palabra
+    out = out.replace(/n([bp])/gi, (m, p1) => (m[0] === 'N' ? 'M' : 'm') + p1);
+
+    // Capitalizar principio de cada línea u oración
+    out = out.replace(/(^\s*[a-záéíóúñ]|[.!?]\s+[a-záéíóúñ])/gm, m => m.toUpperCase());
 
     if (action === 'formal') {
-      return clean
-        .replace(/\b(hola|buenas)\b/gi, 'Estimado/a:')
-        .replace(/\b(quiero|necesito)\b/gi, 'Solicito cordialmente')
-        .replace(/\b(gracias)\b/gi, 'Agradezco de antemano su atención');
+      out = out
+        .replace(/\bHola\b/gi, 'Estimado/a, reciba un cordial saludo.')
+        .replace(/\bquiero\b/gi, 'solicito atentamente')
+        .replace(/\bnecesito\b/gi, 'requiero');
     } else if (action === 'summarize') {
-      const sentences = clean.split(/(?<=[.!?])\s+/);
-      return '• Resumen Ejecutivo: ' + sentences.slice(0, Math.max(1, Math.ceil(sentences.length / 2))).join(' ');
+      const lines = out.split(/[.!?\n]+/).filter(s => s.trim().length > 0);
+      out = '📌 Resumen del documento:\n• ' + lines.slice(0, 3).join('\n• ') + '.';
     }
-    return clean;
-  }
 
-  function replaceSelectedOrInsertText(newTxt) {
-    restoreSelection();
-    const sel = window.getSelection();
-    if (sel && !sel.isCollapsed) {
-      document.execCommand('insertText', false, newTxt);
-    } else {
-      editor.innerHTML += `<p>${newTxt}</p>`;
-    }
+    if (!/[.!?]$/.test(out.trim())) out = out.trim() + '.';
+    return out;
   }
 </script>
 

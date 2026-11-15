@@ -33,7 +33,7 @@ jobs:
           npx cap add android || true
           npx cap sync android
 
-      - name: 5. Poner el icono y configurar permisos + Abrir desde WhatsApp
+     - name: 5. Poner el icono y configurar permisos + Abrir desde WhatsApp
         run: |
           mkdir -p assets
           cp www/logo.png assets/icon.png
@@ -42,15 +42,17 @@ jobs:
           npx capacitor-assets generate --android --iconBackgroundColor '#185ABD' --splashBackgroundColor '#185ABD'
           rm -rf android/app/src/main/res/mipmap-anydpi-v26
 
-          # Inyectar permisos de almacenamiento y el Intent-Filter para abrir .doc / .docx desde WhatsApp
           python3 - << 'EOF'
           manifest_path = "android/app/src/main/AndroidManifest.xml"
           with open(manifest_path, "r", encoding="utf-8") as f:
               xml = f.read()
 
+          if "requestLegacyExternalStorage" not in xml:
+              xml = xml.replace("<application", '<application android:requestLegacyExternalStorage="true"', 1)
+
           perms = """
           <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
           """
           if "WRITE_EXTERNAL_STORAGE" not in xml:
               xml = xml.replace("</manifest>", perms + "\n</manifest>")
