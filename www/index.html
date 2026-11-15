@@ -637,7 +637,7 @@
     background: var(--word-blue-hover);
   }
 
-  /* ================== 10. REGLA Y ÁREA DE TRABAJO (WORKSPACE) ================== */
+ /* ================== 10. REGLA Y ÁREA DE TRABAJO (WORKSPACE) ================== */
   .ruler-bar {
     background: var(--ribbon-bg);
     border-bottom: 1px solid var(--border-color);
@@ -666,20 +666,21 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: auto;
-    padding: 16px 8px 44px 8px;
+    padding: 20px 8px 60px 8px;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px; /* Espacio real limpio entre cada hoja de papel */
     -webkit-overflow-scrolling: touch;
+    background-color: var(--workspace-bg);
   }
 
- /* Contenedor Maestro de la Hoja */
+  /* Contenedor Maestro de la Hoja Individual */
   .document-stage {
-    width: 100%;
+    width: var(--page-px-w, 794px);
     max-width: var(--page-width);
-    /* CAMBIO CLAVE AQUÍ: Permite que la hoja crezca hacia abajo infinitamente */
-    min-height: var(--page-height);
-    height: max-content; 
+    min-height: var(--page-px-h, 1123px);
+    height: auto;
     background-color: var(--page-bg);
     color: var(--page-text);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
@@ -687,12 +688,11 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Cambio de space-between a flex-start */
+    justify-content: space-between;
     transform-origin: top center;
-    transition: max-width 0.2s ease, min-height 0.2s ease, padding 0.2s ease;
+    flex-shrink: 0;
   }
 
-  /* Bordes decorativos de página */
   .document-stage.with-page-border {
     outline: 3px double var(--word-blue-dark);
     outline-offset: -12px;
@@ -707,9 +707,7 @@
     min-height: 14mm;
     z-index: 5;
   }
-  .doc-header-band {
-    border-bottom: 1px dashed transparent;
-  }
+  .doc-header-band { border-bottom: 1px dashed transparent; }
   .doc-footer-band {
     padding: 4mm var(--page-padding) 8mm var(--page-padding);
     border-top: 1px dashed transparent;
@@ -723,23 +721,7 @@
     background: rgba(24, 90, 189, 0.05);
     outline: none;
   }
-  .doc-header-band:empty::before,
-  .footer-custom-text:empty::before {
-    content: attr(data-placeholder);
-    color: #aaa;
-    font-style: italic;
-    display: none;
-  }
-  .doc-header-band[contenteditable="true"]:empty::before,
-  .footer-custom-text[contenteditable="true"]:empty::before {
-    display: inline;
-  }
-
-  .footer-page-number {
-    font-size: 9.5pt;
-    color: #555;
-    width: 100%;
-  }
+  .footer-page-number { font-size: 9.5pt; color: #555; width: 100%; }
 
   /* Capa de Marca de Agua */
   .doc-watermark-layer {
@@ -761,13 +743,93 @@
     white-space: nowrap;
     user-select: none;
   }
-  .watermark-img-item {
-    max-width: 75%;
-    max-height: 75%;
-    opacity: 0.18;
-    object-fit: contain;
+  .watermark-img-item { max-width: 75%; max-height: 75%; opacity: 0.18; object-fit: contain; }
+
+  /* ================== 11. EL LIENZO EDITABLE (#editor) ================== */
+  #editor {
+    flex: 1;
+    width: 100%;
+    padding: 6mm var(--page-padding);
+    outline: none;
+    user-select: text;
+    -webkit-user-select: text;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: var(--page-text);
+    column-count: var(--page-cols);
+    column-gap: 10mm;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    z-index: 2;
   }
 
+  body.reflow-mode .workspace { padding: 0; background: var(--page-bg); }
+  body.reflow-mode .document-stage {
+    width: 100vw !important;
+    min-height: 100% !important;
+    border: none;
+    box-shadow: none;
+  }
+  body.reflow-mode #editor { padding: 14px 16px !important; font-size: 12.5pt; column-count: 1 !important; }
+  body.reflow-mode .ruler-bar { display: none; }
+
+  #editor p { margin-bottom: 8pt; }
+  #editor h1 { font-size: 20pt; color: var(--word-blue); margin: 12pt 0 6pt; font-weight: 700; }
+  #editor h2 { font-size: 15pt; color: #2B579A; margin: 10pt 0 5pt; font-weight: 600; }
+  #editor blockquote {
+    border-left: 4px solid var(--word-blue);
+    padding: 6px 12px;
+    margin: 8pt 0;
+    color: #555;
+    font-style: italic;
+    background: rgba(24, 90, 189, 0.04);
+  }
+  #editor ul, #editor ol { padding-left: 24px; margin-bottom: 8pt; }
+
+  #editor table { width: 100%; border-collapse: collapse; margin: 10pt 0; }
+  #editor th, #editor td { border: 1px solid #8A8886; padding: 6px 8px; min-width: 30px; }
+  #editor th { background-color: #E1ECF9; color: var(--word-blue-dark); font-weight: 700; }
+
+  #editor pre.code-block {
+    background: #1E1E1E;
+    color: #D4D4D4;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #38BDF8;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 9.5pt;
+    overflow-x: auto;
+    margin: 10pt 0;
+    white-space: pre-wrap;
+  }
+
+  #editor img.doc-img-inline { max-width: 100%; height: auto; border-radius: 2px; margin: 6px 0; display: block; }
+  
+  /* Salto de página físico real bloqueado */
+  .visual-page-break {
+    width: 100%;
+    height: 24px;
+    background: #E1DFDD;
+    margin: 20mm -25.4mm;
+    border-top: 1px solid #C8C6C4;
+    border-bottom: 1px solid #C8C6C4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    pointer-events: none;
+  }
+  .visual-page-break::after {
+    content: '--- Salto de Página (Nueva Hoja) ---';
+    background: #FFFFFF;
+    color: #605E5C;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 4px;
+    border: 1px solid #D2D0CE;
+  }
   /* ================== 11. EL LIENZO EDITABLE (#editor) ================== */
   #editor {
     flex: 1;
@@ -2575,8 +2637,10 @@
   /* ================== 7. INSERCIÓN DE PÁGINAS, TABLAS, IMÁGENES, FIRMAS Y CÓDIGO ================== */
   function insertBlankPage() {
     restoreSelection();
-    document.execCommand('insertHTML', false, `<div class="visual-page-break" contenteditable="false"></div><p><br></p>`);
+    const breakHtml = `<div class="visual-page-break" contenteditable="false"></div><p><br></p>`;
+    document.execCommand('insertHTML', false, breakHtml);
     updateDocumentStats();
+    showToast('📄 Nueva página insertada');
   }
 
   function insertPageBreak() {
@@ -3000,52 +3064,38 @@
     }
   }
 
-  // Guarda en Documentos/Descargas de Android y abre el selector nativo si es necesario
+  // Guardado y Compartir Directo optimizado para Capacitor y Android
   async function saveOrShareFileNative(fullFileName, dataContent, mimeType, isBase64Data = false, shareImmediately = false) {
     const base64Payload = isBase64Data ? dataContent : utf8ToBase64(dataContent);
 
     if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Filesystem) {
       const { Filesystem, Share } = Capacitor.Plugins;
-      let savedUri = null;
-
-      // Intentar guardar primero en DOCUMENTS, y si Android 13+ pide ruta alterna, en CACHE para compartir/guardar
       try {
-        const resDoc = await Filesystem.writeFile({
+        // Guardar de forma segura en CACHE interna para permitir compartir de inmediato en WhatsApp
+        const resCache = await Filesystem.writeFile({
           path: fullFileName,
           data: base64Payload,
-          directory: 'DOCUMENTS',
-          recursive: true
+          directory: 'CACHE'
         });
-        savedUri = resDoc.uri;
-        showToast(`✅ Guardado en carpeta Documentos: ${fullFileName}`);
-      } catch (errDoc) {
-        try {
-          const resCache = await Filesystem.writeFile({
-            path: fullFileName,
-            data: base64Payload,
-            directory: 'CACHE'
-          });
-          savedUri = resCache.uri;
-        } catch (errCache) {
-          console.error('Error Filesystem:', errCache);
-        }
-      }
 
-      if (savedUri && Share && (shareImmediately || !savedUri.includes('Documents'))) {
-        try {
-          await Share.share({
-            title: fullFileName,
-            text: fullFileName,
-            url: savedUri,
-            dialogTitle: shareImmediately ? 'Enviar documento a...' : 'Guardar o abrir archivo con...'
-          });
-          return;
-        } catch (sErr) {}
+        if (resCache && resCache.uri) {
+          if (Share) {
+            await Share.share({
+              title: fullFileName,
+              text: `Documento: ${fullFileName}`,
+              url: resCache.uri,
+              dialogTitle: 'Enviar archivo o guardar en el teléfono'
+            });
+            showToast('📤 Abriendo menú de compartir...');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error nativo filesystem:', err);
       }
-      if (savedUri) return;
     }
 
-    // Fallback Web
+    // Fallback Web normal
     const blob = isBase64Data ? base64ToBlob(dataContent, mimeType) : new Blob([dataContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3242,7 +3292,7 @@
       
     }, 500);
   }
-  
+
   // Empaqueta un JPEG dentro de un contenedor PDF 1.4 estándar válido sin librerías externas
   function buildMinimalPdfWithJpeg(jpegBinaryStr, imgW, imgH) {
     const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
