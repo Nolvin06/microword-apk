@@ -673,11 +673,13 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Contenedor Maestro de la Hoja */
+ /* Contenedor Maestro de la Hoja */
   .document-stage {
     width: 100%;
     max-width: var(--page-width);
+    /* CAMBIO CLAVE AQUÍ: Permite que la hoja crezca hacia abajo infinitamente */
     min-height: var(--page-height);
+    height: max-content; 
     background-color: var(--page-bg);
     color: var(--page-text);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
@@ -685,7 +687,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start; /* Cambio de space-between a flex-start */
     transform-origin: top center;
     transition: max-width 0.2s ease, min-height 0.2s ease, padding 0.2s ease;
   }
@@ -1133,43 +1135,57 @@
     @page {
       margin: 0 !important;
     }
-    html, body, .workspace {
+    
+    html, body {
       background: #FFFFFF !important;
-      color: #000000 !important;
-      height: auto !important;
+      height: auto !important; /* CRÍTICO: Auto permite que el PDF se corte en varias páginas */
       width: auto !important;
-      overflow: visible !important;
-      padding: 0 !important;
       margin: 0 !important;
+      padding: 0 !important;
       display: block !important;
+      overflow: visible !important;
     }
-    .ui-shell,
-    .status-bar,
-    .modal-backdrop,
-    .floating-toolbar,
-    .slash-menu,
-    .exit-zen-btn,
-    .toast-notification {
+
+    .workspace {
+      display: block !important;
+      padding: 0 !important;
+      height: auto !important;
+      overflow: visible !important;
+      background: transparent !important;
+    }
+
+    .ui-shell, .status-bar, .modal-backdrop, .floating-toolbar, .slash-menu, .exit-zen-btn, .toast-notification {
       display: none !important;
     }
+
     .document-stage {
-      max-width: 100% !important;
       width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important; /* CRÍTICO: Evita el efecto de página infinita */
       min-height: auto !important;
       box-shadow: none !important;
       border: none !important;
-      background: #FFFFFF !important;
-      color: #000000 !important;
+      margin: 0 !important;
+      padding: 0 !important;
       transform: none !important;
+      background: transparent !important;
+      background-image: none !important; /* Quita el fondo falso de la pantalla */
     }
+
     #editor {
       color: #000000 !important;
       background: transparent !important;
+      height: auto !important;
     }
+
     .visual-page-break {
       border: none !important;
       margin: 0 !important;
+      height: 0 !important;
+      page-break-after: always !important; /* Fuerza el salto de hoja en el PDF */
+      break-after: page !important;
     }
+    
     .visual-page-break::after {
       display: none !important;
     }
@@ -3200,26 +3216,33 @@
     }
   }
 
-  // Generador de archivo PDF Binario Real 100% Offline (para que se guarde como .pdf real en Android)
+  // Generador de PDF usando el motor nativo de Android (Paginación y texto real)
   async function exportNativePDF(compressImages = false, shareDirect = false) {
-    showToast('📕 Creando archivo PDF real...');
-    try {
-      const scale = compressImages ? 1.0 : 1.6;
-      const quality = compressImages ? 0.55 : 0.88;
-      const canvas = await renderDocumentToCanvas(scale);
-      const jpgDataUrl = canvas.toDataURL('image/jpeg', quality);
-      const jpegBytes = atob(jpgDataUrl.split(',')[1]);
+    showToast('📕 Generando PDF multipágina real...');
+    
+    // Apagar temporalmente los modos de pantalla para que imprima limpio
+    const wasReflow = document.body.classList.contains('reflow-mode');
+    if (wasReflow) document.body.classList.remove('reflow-mode');
+    
+    const oldTransform = docStage.style.transform;
+    docStage.style.transform = 'none';
 
-      const pdfBytesString = buildMinimalPdfWithJpeg(jpegBytes, canvas.width, canvas.height);
-      const pdfBase64 = window.btoa(pdfBytesString);
-      const fileName = (docTitleInput.value || 'Documento1').trim() + '.pdf';
-
-      await saveOrShareFileNative(fileName, pdfBase64, 'application/pdf', true, shareDirect);
-    } catch (err) {
-      window.print();
-    }
+    setTimeout(() => {
+      try {
+        // Esto abre la ventana nativa de Android. Debes elegir "Guardar como PDF".
+        window.print(); 
+      } catch (e) {
+        console.error("Error al imprimir:", e);
+        showToast('Error al generar PDF. Usa Compartir .DOC en su lugar.');
+      }
+      
+      // Restaurar la vista móvil
+      docStage.style.transform = oldTransform;
+      if (wasReflow) document.body.classList.add('reflow-mode');
+      
+    }, 500);
   }
-
+  
   // Empaqueta un JPEG dentro de un contenedor PDF 1.4 estándar válido sin librerías externas
   function buildMinimalPdfWithJpeg(jpegBinaryStr, imgW, imgH) {
     const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
