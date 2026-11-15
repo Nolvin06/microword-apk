@@ -1,21 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Documento 1</title>
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>MicroWord NART - Suite Profesional</title>
+
+ <style>
+  /* ================== 1. VARIABLES GLOBALES Y TEMAS ================== */
   :root {
     --word-blue: #185ABD;
     --word-blue-dark: #103F91;
-    --word-blue-light: #E1ECF9;
+    --word-blue-light: #C7E0F4;
+    --word-blue-hover: #E1ECF9;
+    --whatsapp-green: #128C7E;
     --ribbon-bg: #F3F2F1;
+    --surface-bg: #FFFFFF;
+    --workspace-bg: #E1DFDD;
     --border-color: #D2D0CE;
-    --workspace-bg: #E6E6E6;
     --text-main: #252423;
     --text-muted: #605E5C;
+    
+    /* Dimensiones dinámicas de la hoja (Por defecto A4 Vertical) */
+    --page-width: 210mm;
+    --page-height: 297mm;
+    --page-padding: 25.4mm;
+    --page-bg: #FFFFFF;
+    --page-text: #000000;
+    --page-cols: 1;
   }
 
+  /* ================== 2. MODO OSCURO PURO (TRUE DARK MODE) ================== */
+  body.dark-mode {
+    --word-blue: #2874A6;
+    --word-blue-dark: #1B4F72;
+    --word-blue-light: #154360;
+    --word-blue-hover: #212F3D;
+    --ribbon-bg: #1E1E1E;
+    --surface-bg: #2D2D2D;
+    --workspace-bg: #0F0F0F;
+    --border-color: #3E3E42;
+    --text-main: #F1F1F1;
+    --text-muted: #A0A0A0;
+    --page-bg: #161616;
+    --page-text: #E8E8E8;
+  }
+
+  /* ================== 3. RESET Y ESTRUCTURA PRINCIPAL ================== */
   * {
     box-sizing: border-box;
     margin: 0;
@@ -24,80 +54,152 @@
   }
 
   body {
-    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
-    background: var(--workspace-bg);
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--workspace-bg);
     color: var(--text-main);
     height: 100dvh;
+    width: 100vw;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     user-select: none;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  /* ================= 1. BARRA DE TÍTULO SUPERIOR ================= */
+  .ui-shell {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 100;
+    background: var(--ribbon-bg);
+  }
+
+  /* ================== 4. MODO PULGAR (BOTTOM-HEAVY UI) ================== */
+  body.thumb-mode {
+    flex-direction: column-reverse;
+  }
+  body.thumb-mode .ui-shell {
+    flex-direction: column-reverse;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.22);
+  }
+  body.thumb-mode .top-bar {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  body.thumb-mode .menu-row {
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+  }
+  body.thumb-mode .ribbon-wrapper {
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+  }
+
+  /* ================== 5. MODO ENFOQUE (ZEN MODE) ================== */
+  body.zen-mode .ui-shell,
+  body.zen-mode .status-bar {
+    display: none !important;
+  }
+  body.zen-mode .workspace {
+    padding: 8px 4px;
+  }
+
+  .exit-zen-btn {
+    display: none;
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    background: var(--word-blue);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    z-index: 9000;
+    cursor: pointer;
+  }
+  body.zen-mode .exit-zen-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ================== 6. BARRA SUPERIOR AZUL (HEADER) ================== */
   .top-bar {
     background: var(--word-blue);
     color: #fff;
-    height: 44px;
+    height: 46px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 10px;
-    gap: 8px;
+    padding: 0 8px;
+    gap: 6px;
     flex-shrink: 0;
   }
 
   .top-left, .top-center, .top-right {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
   }
 
   .app-logo {
-    width: 26px;
-    height: 26px;
-    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
     background: #fff;
     color: var(--word-blue);
     font-weight: 900;
-    font-size: 15px;
+    font-size: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    object-fit: contain;
-    padding: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     flex-shrink: 0;
   }
 
-  .autosave-box {
+  /* Switch de Autoguardado */
+  .autosave-toggle {
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 12px;
-    margin-right: 4px;
-  }
-
-  .toggle-switch {
-    width: 32px;
-    height: 16px;
-    background: rgba(255,255,255,0.35);
-    border-radius: 10px;
-    position: relative;
+    font-size: 11px;
     cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.6);
+    margin: 0 4px;
   }
-  .toggle-switch.on { background: #2B88D8; }
-  .toggle-knob {
-    width: 12px;
-    height: 12px;
+  .autosave-txt {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .autosave-txt { display: inline; }
+  }
+  .autosave-toggle input { display: none; }
+  .toggle-slider {
+    width: 28px;
+    height: 15px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 15px;
+    position: relative;
+    transition: 0.2s;
+  }
+  .toggle-slider::after {
+    content: '';
+    width: 11px;
+    height: 11px;
     background: #fff;
     border-radius: 50%;
     position: absolute;
-    top: 1px;
+    top: 2px;
     left: 2px;
     transition: 0.2s;
   }
-  .toggle-switch.on .toggle-knob { left: 16px; }
+  .autosave-toggle input:checked + .toggle-slider {
+    background: #34D399;
+  }
+  .autosave-toggle input:checked + .toggle-slider::after {
+    transform: translateX(13px);
+  }
 
   .icon-btn-top {
     background: transparent;
@@ -106,58 +208,68 @@
     width: 30px;
     height: 30px;
     border-radius: 4px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 15px;
     cursor: pointer;
+    transition: background 0.15s;
   }
-  .icon-btn-top:hover, .icon-btn-top:active {
-    background: rgba(255,255,255,0.18);
+  .icon-btn-top:active, .icon-btn-top:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 
   .doc-title-input {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: #fff;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     padding: 4px 8px;
     border-radius: 4px;
-    width: 135px;
+    width: 115px;
     text-align: center;
+    transition: all 0.2s;
   }
   .doc-title-input:focus {
     background: #fff;
-    color: #222;
+    color: #111;
     outline: none;
+    width: 145px;
   }
 
-  .user-badge {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #D83B01;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255,255,255,0.6);
-  }
-
-  /* ================= 2. BARRA DE PESTAÑAS Y EXPORTACIÓN ================= */
-  .menu-row {
+  .btn-top-action {
     background: #fff;
+    color: var(--word-blue);
+    border: none;
+    padding: 5px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-top-share {
+    background: var(--whatsapp-green);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.4);
+    width: 30px;
+    height: 28px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* ================== 7. BARRA DE PESTAÑAS (TABS) ================== */
+  .menu-row {
+    background: var(--ribbon-bg);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 8px;
+    padding: 0 6px;
     height: 38px;
-    flex-shrink: 0;
-    gap: 8px;
+    gap: 6px;
   }
 
   .tabs-scroll {
@@ -174,82 +286,75 @@
     background: transparent;
     border: none;
     color: var(--text-main);
-    padding: 0 12px;
+    padding: 0 11px;
     height: 100%;
     font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
     position: relative;
     display: flex;
     align-items: center;
   }
+
   .tab-btn.file-tab {
     background: var(--word-blue);
     color: #fff;
-    font-weight: 600;
+    font-weight: 700;
     border-radius: 4px;
-    height: 28px;
+    height: 27px;
+    padding: 0 10px;
     margin-right: 4px;
   }
-  .tab-btn.active {
+
+  .tab-btn.active:not(.file-tab) {
     color: var(--word-blue);
-    font-weight: 600;
+    font-weight: 700;
   }
-  .tab-btn.active::after {
+  .tab-btn.active:not(.file-tab)::after {
     content: '';
     position: absolute;
     bottom: 0;
-    left: 8px;
-    right: 8px;
+    left: 6px;
+    right: 6px;
     height: 3px;
     background: var(--word-blue);
-    border-radius: 2px 2px 0 0;
+    border-radius: 3px 3px 0 0;
   }
 
-  .action-buttons {
+  .menu-quick-right {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     flex-shrink: 0;
   }
 
-  .btn-doc {
-    background: #fff;
+  .quick-pill-btn {
+    background: var(--surface-bg);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    padding: 5px 10px;
+    padding: 4px 8px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
     white-space: nowrap;
   }
-  .btn-pdf {
+  .quick-pill-btn.accent {
     background: var(--word-blue);
     color: #fff;
-    border: 1px solid var(--word-blue-dark);
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
+    border-color: var(--word-blue-dark);
   }
 
-  /* ================= 3. CINTA DE OPCIONES (THE RIBBON) ================= */
+  /* ================== 8. CINTA DE OPCIONES (RIBBON) ================== */
   .ribbon-wrapper {
     background: var(--ribbon-bg);
     border-bottom: 1px solid var(--border-color);
     padding: 6px 8px 4px 8px;
     overflow-x: auto;
+    overflow-y: hidden;
     scrollbar-width: none;
-    flex-shrink: 0;
+    -webkit-overflow-scrolling: touch;
   }
   .ribbon-wrapper::-webkit-scrollbar { display: none; }
 
@@ -258,9 +363,11 @@
     align-items: stretch;
     gap: 10px;
     width: max-content;
-    min-height: 78px;
+    min-height: 76px;
   }
-  .ribbon-panel.active { display: flex; }
+  .ribbon-panel.active {
+    display: flex;
+  }
 
   .ribbon-section {
     display: flex;
@@ -268,8 +375,12 @@
     justify-content: space-between;
     padding-right: 10px;
     border-right: 1px solid var(--border-color);
+    flex-shrink: 0;
   }
-  .ribbon-section:last-child { border-right: none; }
+  .ribbon-section:last-child {
+    border-right: none;
+    padding-right: 2px;
+  }
 
   .section-body {
     display: flex;
@@ -280,7 +391,9 @@
   .section-rows {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 4px;
+    flex: 1;
   }
   .tool-row {
     display: flex;
@@ -292,33 +405,38 @@
     color: var(--text-muted);
     text-align: center;
     margin-top: 3px;
+    font-weight: 500;
     letter-spacing: 0.2px;
   }
 
-  /* Botones del Ribbon */
-  .btn-paste-big {
-    background: #fff;
+  /* Botones Grandes (Pegar, Nuevo, Abrir) */
+  .tool-btn-big {
+    background: var(--surface-bg);
     border: 1px solid var(--border-color);
+    color: var(--text-main);
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 4px 10px;
     height: 56px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 3px;
     font-size: 11px;
+    font-weight: 600;
     cursor: pointer;
-    gap: 2px;
   }
-  .btn-paste-big span { font-size: 20px; }
+  .tool-btn-big:active { background: var(--word-blue-hover); }
+  .big-icon { font-size: 20px; line-height: 1; }
 
+  /* Botones Estándar de Herramientas */
   .tool-btn {
-    background: #fff;
+    background: var(--surface-bg);
     border: 1px solid var(--border-color);
     color: var(--text-main);
     min-width: 28px;
     height: 26px;
-    padding: 0 6px;
+    padding: 0 7px;
     border-radius: 3px;
     display: inline-flex;
     align-items: center;
@@ -327,35 +445,61 @@
     cursor: pointer;
     gap: 4px;
     white-space: nowrap;
+    transition: all 0.12s;
   }
-  .tool-btn:hover { background: #EBF3FC; border-color: #9ACEFF; }
+  .tool-btn:active {
+    transform: scale(0.96);
+  }
   .tool-btn.active {
-    background: #C7E0F4;
+    background: var(--word-blue-light);
     border-color: var(--word-blue);
     color: var(--word-blue-dark);
     font-weight: 700;
   }
+  body.dark-mode .tool-btn.active {
+    color: #fff;
+  }
 
+  .tool-btn.accent-btn {
+    background: var(--word-blue);
+    color: #fff;
+    border-color: var(--word-blue-dark);
+    font-weight: 600;
+  }
+  .tool-btn.share-wa-btn {
+    background: var(--whatsapp-green);
+    color: #fff;
+    border-color: #075E54;
+    font-weight: 600;
+  }
+
+  /* Selectores Desplegables */
   .tool-select {
     height: 26px;
     border: 1px solid var(--border-color);
     border-radius: 3px;
-    padding: 0 4px;
+    padding: 0 5px;
     font-size: 12px;
-    background: #fff;
+    background: var(--surface-bg);
     color: var(--text-main);
+    outline: none;
+    cursor: pointer;
   }
+  .font-select { width: 138px; }
+  .size-select { width: 52px; font-weight: 600; }
 
-  /* Botón de Color y Resaltador estilo Word */
+  /* Selectores de Color y Resaltado */
   .color-tool {
     display: inline-flex;
     align-items: center;
-    background: #fff;
+    background: var(--surface-bg);
     border: 1px solid var(--border-color);
     border-radius: 3px;
     height: 26px;
-    padding: 0 3px;
-    gap: 2px;
+    padding: 0 5px;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: 700;
   }
   .color-tool input[type="color"] {
     width: 18px;
@@ -365,113 +509,408 @@
     background: transparent;
     cursor: pointer;
   }
-
-  /* Galería de Estilos estilo Word */
-  .styles-gallery {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-  }
-  .style-card {
-    background: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    width: 72px;
-    height: 54px;
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
+  .mini-clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 10px;
+    padding: 0 2px;
     cursor: pointer;
   }
-  .style-card.active, .style-card:hover {
-    border: 2px solid var(--word-blue);
-    background: #F4F9FD;
-  }
-  .style-preview {
-    font-size: 13px;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
-  .style-name {
-    font-size: 10px;
-    color: var(--text-muted);
+
+  .tool-check-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+    padding: 0 8px;
+    height: 26px;
+    border-radius: 3px;
+    cursor: pointer;
   }
 
-  /* ================= 4. REGLA MILIMETRADA ================= */
-  .ruler-bar {
-    background: #F8F8F8;
+  /* Tarjetas de Estilos Rápidos */
+  .style-card {
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 3px 8px;
+    height: 54px;
+    min-width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .style-card:active { border-color: var(--word-blue); background: var(--word-blue-hover); }
+  .st-preview-normal { font-size: 12px; color: var(--text-main); }
+  .st-preview-h1 { font-size: 14px; font-weight: 800; color: var(--word-blue); }
+  .st-preview-h2 { font-size: 13px; font-weight: 700; color: #2B579A; }
+  .st-preview-quote { font-size: 12px; font-style: italic; color: var(--text-muted); }
+  .st-name { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ================== 9. MENÚS FLOTANTES (CONTEXTUAL Y SLASH /) ================== */
+  .floating-toolbar {
+    position: fixed;
+    display: none;
+    align-items: center;
+    gap: 3px;
+    background: #1F2937;
+    color: #fff;
+    padding: 5px 7px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    z-index: 4000;
+  }
+  .float-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .float-btn:active { background: rgba(255,255,255,0.2); }
+  .float-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255,255,255,0.25);
+    margin: 0 2px;
+  }
+  .float-color-lbl {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0 3px;
+  }
+  .float-color-lbl input {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    position: absolute;
+  }
+
+  /* Menú Slash (/) */
+  .slash-menu {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    width: 210px;
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+    z-index: 4500;
+    overflow: hidden;
+  }
+  .slash-header {
+    background: var(--ribbon-bg);
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .slash-item {
+    background: transparent;
+    border: none;
     border-bottom: 1px solid var(--border-color);
-    height: 22px;
+    color: var(--text-main);
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slash-item:hover, .slash-item:active {
+    background: var(--word-blue-hover);
+  }
+
+  /* ================== 10. REGLA Y ÁREA DE TRABAJO (WORKSPACE) ================== */
+  .ruler-bar {
+    background: var(--ribbon-bg);
+    border-bottom: 1px solid var(--border-color);
+    height: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-shrink: 0;
-    overflow: hidden;
+    padding: 0 10px;
   }
   .ruler-inner {
     width: 100%;
-    max-width: 210mm;
-    height: 14px;
-    background: #fff;
-    border: 1px solid #C8C6C4;
+    max-width: var(--page-width);
+    height: 13px;
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
-    font-size: 9px;
-    color: #605E5C;
+    padding: 0 8px;
+    font-size: 8px;
+    color: var(--text-muted);
+    overflow: hidden;
   }
 
-  /* ================= 5. ÁREA DE TRABAJO Y HOJA A4 ================= */
   .workspace {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
-    padding: 14px 8px 36px 8px;
+    overflow-x: auto;
+    padding: 16px 8px 44px 8px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* REGLA DE ORO: El fondo de #editor es SIEMPRE blanco (o el color de hoja elegido) */
-  #editor.page-sheet {
-    background-color: #ffffff !important;
+  /* Contenedor Maestro de la Hoja */
+  .document-stage {
     width: 100%;
-    max-width: 210mm;
-    min-height: 297mm;
-    padding: 20px 18px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.16);
-    border: 1px solid #D2D0CE;
+    max-width: var(--page-width);
+    min-height: var(--page-height);
+    background-color: var(--page-bg);
+    color: var(--page-text);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--border-color);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transform-origin: top center;
+    transition: max-width 0.2s ease, min-height 0.2s ease, padding 0.2s ease;
+  }
+
+  /* Bordes decorativos de página */
+  .document-stage.with-page-border {
+    outline: 3px double var(--word-blue-dark);
+    outline-offset: -12px;
+  }
+
+  /* Encabezado y Pie de Página */
+  .doc-header-band,
+  .doc-footer-band {
+    padding: 8mm var(--page-padding) 4mm var(--page-padding);
+    font-size: 9.5pt;
+    color: #666;
+    min-height: 14mm;
+    z-index: 5;
+  }
+  .doc-header-band {
+    border-bottom: 1px dashed transparent;
+  }
+  .doc-footer-band {
+    padding: 4mm var(--page-padding) 8mm var(--page-padding);
+    border-top: 1px dashed transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .doc-header-band[contenteditable="true"],
+  .footer-custom-text[contenteditable="true"] {
+    border-color: var(--word-blue);
+    background: rgba(24, 90, 189, 0.05);
+    outline: none;
+  }
+  .doc-header-band:empty::before,
+  .footer-custom-text:empty::before {
+    content: attr(data-placeholder);
+    color: #aaa;
+    font-style: italic;
+    display: none;
+  }
+  .doc-header-band[contenteditable="true"]:empty::before,
+  .footer-custom-text[contenteditable="true"]:empty::before {
+    display: inline;
+  }
+
+  .footer-page-number {
+    font-size: 9.5pt;
+    color: #555;
+    width: 100%;
+  }
+
+  /* Capa de Marca de Agua */
+  .doc-watermark-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .watermark-text-item {
+    font-size: 54pt;
+    font-weight: 900;
+    color: rgba(150, 150, 150, 0.16);
+    transform: rotate(-38deg);
+    text-transform: uppercase;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .watermark-img-item {
+    max-width: 75%;
+    max-height: 75%;
+    opacity: 0.18;
+    object-fit: contain;
+  }
+
+  /* ================== 11. EL LIENZO EDITABLE (#editor) ================== */
+  #editor {
+    flex: 1;
+    width: 100%;
+    padding: 6mm var(--page-padding);
     outline: none;
     user-select: text;
-    font-family: 'Calibri', 'Segoe UI', sans-serif;
+    -webkit-user-select: text;
+    font-family: Calibri, 'Segoe UI', sans-serif;
     font-size: 11pt;
     line-height: 1.5;
-    color: #000000;
+    color: var(--page-text);
+    column-count: var(--page-cols);
+    column-gap: 10mm;
     word-wrap: break-word;
-    transform-origin: top center;
+    overflow-wrap: break-word;
+    z-index: 2;
   }
 
-  @media (min-width: 768px) {
-    #editor.page-sheet {
-      padding: 25.4mm;
-    }
+  /* MODO LECTURA / REFLOW MÓVIL */
+  body.reflow-mode .workspace {
+    padding: 0;
+  }
+  body.reflow-mode .document-stage {
+    max-width: 100vw !important;
+    min-height: 100% !important;
+    border: none;
+    box-shadow: none;
+  }
+  body.reflow-mode #editor {
+    padding: 14px 16px !important;
+    font-size: 12.5pt;
+    column-count: 1 !important;
+  }
+  body.reflow-mode .ruler-bar {
+    display: none;
   }
 
-  #editor.page-sheet p { margin-bottom: 8px; }
-  #editor.page-sheet table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-  #editor.page-sheet td, #editor.page-sheet th { border: 1px solid #333; padding: 6px; min-width: 40px; }
-  #editor.page-sheet blockquote {
-    border-left: 3px solid var(--word-blue);
-    padding-left: 10px;
+  /* Elementos internos ricos del documento */
+  #editor p { margin-bottom: 8pt; }
+  #editor h1 { font-size: 20pt; color: #185ABD; margin: 12pt 0 6pt; font-weight: 700; }
+  #editor h2 { font-size: 15pt; color: #2B579A; margin: 10pt 0 5pt; font-weight: 600; }
+  #editor blockquote {
+    border-left: 4px solid var(--word-blue);
+    padding: 6px 12px;
+    margin: 8pt 0;
     color: #555;
     font-style: italic;
-    margin: 8px 0;
+    background: rgba(24, 90, 189, 0.04);
+  }
+  #editor ul, #editor ol {
+    padding-left: 24px;
+    margin-bottom: 8pt;
   }
 
-  /* ================= 6. BARRA DE ESTADO INFERIOR ================= */
+  /* Tablas estilo Word */
+  #editor table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10pt 0;
+  }
+  #editor th, #editor td {
+    border: 1px solid #8A8886;
+    padding: 6px 8px;
+    min-width: 30px;
+  }
+  #editor th {
+    background-color: #E1ECF9;
+    color: #103F91;
+    font-weight: 700;
+  }
+
+  /* Bloques de Código para TI */
+  #editor pre.code-block {
+    background: #1E1E1E;
+    color: #D4D4D4;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #38BDF8;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 9.5pt;
+    overflow-x: auto;
+    margin: 10pt 0;
+    white-space: pre-wrap;
+  }
+
+  /* Imágenes Inteligentes (En línea y Flotantes) */
+  #editor img.doc-img-inline {
+    max-width: 100%;
+    height: auto;
+    border-radius: 2px;
+    margin: 6px 0;
+  }
+  #editor .doc-img-float-wrap {
+    display: inline-block;
+    position: relative;
+    resize: both;
+    overflow: hidden;
+    border: 1px dashed transparent;
+    margin: 4px 8px 4px 0;
+    float: left;
+    max-width: 65%;
+  }
+  #editor .doc-img-float-wrap:hover,
+  #editor .doc-img-float-wrap:focus-within {
+    border-color: var(--word-blue);
+  }
+  #editor .doc-img-float-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* Salto de página visual */
+  .visual-page-break {
+    border-top: 2px dashed #999;
+    margin: 18mm 0;
+    position: relative;
+    text-align: center;
+    page-break-after: always;
+    break-after: page;
+  }
+  .visual-page-break::after {
+    content: '--- Salto de Página ---';
+    background: var(--page-bg);
+    color: #888;
+    font-size: 8pt;
+    padding: 0 8px;
+    position: relative;
+    top: -9px;
+  }
+
+  /* Etiqueta de Variable Mágica */
+  .magic-var-tag {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #F59E0B;
+    border-radius: 3px;
+    padding: 0 4px;
+    font-family: monospace;
+    font-weight: 700;
+  }
+
+  /* ================== 12. BARRA DE ESTADO INFERIOR ================== */
   .status-bar {
     background: var(--word-blue);
     color: #fff;
@@ -482,658 +921,2201 @@
     padding: 0 10px;
     font-size: 11px;
     flex-shrink: 0;
+    gap: 8px;
     overflow-x: auto;
     white-space: nowrap;
-    gap: 12px;
   }
   .status-left, .status-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
   }
-  .zoom-slider { width: 75px; accent-color: #fff; cursor: pointer; }
+  .status-mini-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .zoom-slider {
+    width: 68px;
+    accent-color: #fff;
+    cursor: pointer;
+  }
 
-  /* ================= 7. MODAL PARA NOMBRAR Y EXPORTAR ARCHIVO ================= */
+  /* ================== 13. VENTANAS MODALES ================== */
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(2px);
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
-    padding: 16px;
+    z-index: 8000;
+    padding: 14px;
   }
-  .modal-backdrop.open { display: flex; }
+  .modal-backdrop.open {
+    display: flex;
+  }
 
   .modal-card {
-    background: #fff;
+    background: var(--surface-bg);
+    color: var(--text-main);
     width: 100%;
-    max-width: 380px;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    max-width: 390px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
     overflow: hidden;
+    animation: modalPop 0.18s ease-out;
   }
+  @keyframes modalPop {
+    from { transform: scale(0.93); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
   .modal-header {
     background: var(--word-blue);
     color: #fff;
-    padding: 12px 16px;
-    font-weight: 600;
+    padding: 12px 15px;
     font-size: 14px;
+    font-weight: 700;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
   }
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
   .modal-body {
-    padding: 16px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    max-height: 70vh;
+    overflow-y: auto;
   }
-  .modal-body label {
+  .modal-label {
     font-size: 12px;
     font-weight: 600;
     color: var(--text-main);
   }
+  .modal-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
   .modal-input {
     width: 100%;
-    padding: 9px 10px;
-    border: 1px solid #8A8886;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background: var(--surface-bg);
+    color: var(--text-main);
+    font-size: 13px;
+    outline: none;
   }
   .modal-input:focus {
     border-color: var(--word-blue);
-    outline: 2px solid var(--word-blue-light);
   }
+
+  .modal-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .modal-check-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+
+  .signature-canvas-wrap {
+    border: 2px dashed var(--border-color);
+    border-radius: 6px;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    touch-action: none;
+  }
+  #signature-canvas {
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .history-preview-box {
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 10px;
+    height: 130px;
+    overflow-y: auto;
+    font-size: 11px;
+    background: var(--ribbon-bg);
+  }
+
   .modal-footer {
-    padding: 10px 16px;
-    background: #F3F2F1;
+    padding: 10px 15px;
+    background: var(--ribbon-bg);
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+    flex-wrap: wrap;
+  }
+  .modal-btn-secondary {
+    background: var(--surface-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 7px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal-btn-primary {
+    background: var(--word-blue);
+    color: #fff;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .modal-btn-share {
+    background: var(--whatsapp-green);
+    color: #fff;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
   }
 
-  /* ================= 8. IMPRESIÓN Y EXPORTACIÓN A PDF LIMPIA ================= */
+  /* ================== 14. TOAST DE NOTIFICACIONES ================== */
+  .toast-notification {
+    position: fixed;
+    bottom: 42px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(17, 24, 39, 0.92);
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 9500;
+    white-space: nowrap;
+  }
+  .toast-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ================== 15. REGLAS ESTRICTAS DE IMPRESIÓN / PDF ================== */
   @media print {
-    @page { size: A4; margin: 20mm; }
-    .top-bar, .menu-row, .ribbon-wrapper, .ruler-bar, .status-bar, .modal-backdrop {
-      display: none !important;
+    @page {
+      margin: 0 !important;
     }
-    body, .workspace {
-      background: #ffffff !important;
+    html, body, .workspace {
+      background: #FFFFFF !important;
+      color: #000000 !important;
+      height: auto !important;
+      width: auto !important;
+      overflow: visible !important;
       padding: 0 !important;
       margin: 0 !important;
-      height: auto !important;
-      overflow: visible !important;
+      display: block !important;
     }
-    #editor.page-sheet {
+    .ui-shell,
+    .status-bar,
+    .modal-backdrop,
+    .floating-toolbar,
+    .slash-menu,
+    .exit-zen-btn,
+    .toast-notification {
+      display: none !important;
+    }
+    .document-stage {
+      max-width: 100% !important;
+      width: 100% !important;
+      min-height: auto !important;
       box-shadow: none !important;
       border: none !important;
-      padding: 0 !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      min-height: auto !important;
-      zoom: 100% !important;
+      background: #FFFFFF !important;
+      color: #000000 !important;
+      transform: none !important;
+    }
+    #editor {
+      color: #000000 !important;
+      background: transparent !important;
+    }
+    .visual-page-break {
+      border: none !important;
+      margin: 0 !important;
+    }
+    .visual-page-break::after {
+      display: none !important;
     }
   }
 </style>
+
 </head>
-<body>
+<body id="app-body">
 
-  <!-- 1. BARRA DE TÍTULO SUPERIOR -->
-  <div class="top-bar">
-    <div class="top-left">
-      <img src="logo.png" alt="W" class="app-logo" onerror="this.outerHTML='<div class=\'app-logo\'>W</div>'" />
-      <div class="autosave-box" onclick="toggleAutoSave()">
-        <span>Autoguardado</span>
-        <div id="autosaveSwitch" class="toggle-switch on"><div class="toggle-knob"></div></div>
+  <!-- ==================== BOTÓN FLOTANTE SALIR MODO ZEN ==================== -->
+  <button id="exit-zen-btn" class="exit-zen-btn" onclick="toggleZenMode()" title="Salir del Modo Enfoque">
+    ✕ Salir Zen
+  </button>
+
+  <!-- ==================== MENÚ CONTEXTUAL FLOTANTE (NOTION STYLE) ==================== -->
+  <div id="floating-toolbar" class="floating-toolbar" onmousedown="event.preventDefault()">
+    <button class="float-btn" onclick="execCmd('bold')" title="Negrita"><b>B</b></button>
+    <button class="float-btn" onclick="execCmd('italic')" title="Cursiva"><i>I</i></button>
+    <button class="float-btn" onclick="execCmd('underline')" title="Subrayado"><u>U</u></button>
+    <button class="float-btn" onclick="execCmd('strikeThrough')" title="Tachado"><s>S</s></button>
+    <span class="float-divider"></span>
+    <label class="float-color-lbl" title="Color de texto">
+      A🎨
+      <input type="color" onchange="applyTextColor(this.value)" />
+    </label>
+    <label class="float-color-lbl" title="Resaltador inteligente">
+      🖍️
+      <input type="color" value="#ffff00" onchange="applyHighlightColor(this.value)" />
+    </label>
+    <span class="float-divider"></span>
+    <button class="float-btn" onclick="nativeCopy()" title="Copiar">📋</button>
+    <button class="float-btn" onclick="openAiQuickMenu()" title="IA Local">🤖</button>
+    <button class="float-btn" onclick="execCmd('removeFormat')" title="Limpiar formato">🧹</button>
+  </div>
+
+  <!-- ==================== MENÚ RÁPIDO COMANDO SLASH (/) ==================== -->
+  <div id="slash-menu" class="slash-menu">
+    <div class="slash-header">Comandos Rápidos (/)</div>
+    <button class="slash-item" onclick="executeSlashCommand('h1')"><b>H1</b> Título Principal</button>
+    <button class="slash-item" onclick="executeSlashCommand('h2')"><b>H2</b> Subtítulo</button>
+    <button class="slash-item" onclick="executeSlashCommand('ul')">• Lista con viñetas</button>
+    <button class="slash-item" onclick="executeSlashCommand('ol')">1. Lista numerada</button>
+    <button class="slash-item" onclick="executeSlashCommand('table')">▦ Insertar Tabla</button>
+    <button class="slash-item" onclick="executeSlashCommand('code')">💻 Bloque de Código</button>
+    <button class="slash-item" onclick="executeSlashCommand('sign')">✍️ Dibujar Firma</button>
+    <button class="slash-item" onclick="executeSlashCommand('date')">📅 Fecha y Hora</button>
+    <button class="slash-item" onclick="executeSlashCommand('pagebreak')">📄 Salto de Página</button>
+  </div>
+
+  <!-- ==================== CONTENEDOR DE NAVEGACIÓN Y CINTA (TOP O BOTTOM EN MODO PULGAR) ==================== -->
+  <header id="main-ui-shell" class="ui-shell">
+
+    <!-- 1. BARRA AZUL SUPERIOR ESTILO WORD -->
+    <div class="top-bar">
+      <div class="top-left">
+        <div class="app-logo" title="MicroWord NART">W</div>
+        <label class="autosave-toggle" title="Guardado automático en memoria local">
+          <span class="autosave-txt">Autoguardado</span>
+          <input type="checkbox" id="autosave-check" checked onchange="toggleAutosave(this.checked)" />
+          <span class="toggle-slider"></span>
+        </label>
+        <button class="icon-btn-top" onmousedown="event.preventDefault()" onclick="saveSnapshotManual()" title="Guardar versión ahora (Snapshot)">💾</button>
+        <button class="icon-btn-top" onmousedown="event.preventDefault()" onclick="execCmd('undo')" title="Deshacer">↩️</button>
+        <button class="icon-btn-top" onmousedown="event.preventDefault()" onclick="execCmd('redo')" title="Rehacer">↪️</button>
+        <button class="icon-btn-top" onmousedown="event.preventDefault()" onclick="openModal('modal-history')" title="Máquina del Tiempo (Historial)">🕒</button>
       </div>
-      <button class="icon-btn-top" onclick="openSaveModal('pdf')" title="Guardar">💾</button>
-      <button class="icon-btn-top" onclick="execCmd('undo')" title="Deshacer">↶</button>
-      <button class="icon-btn-top" onclick="execCmd('redo')" title="Rehacer">↷</button>
+
+      <div class="top-center">
+        <input type="text" id="doc-title" class="doc-title-input" value="Documento1" placeholder="Nombre de archivo" onchange="updateDocTitle(this.value)" />
+      </div>
+
+      <div class="top-right">
+        <button class="icon-btn-top" id="btn-thumb-top" onclick="toggleThumbMode()" title="Modo Pulgar (Bajar/Subir herramientas)">👇</button>
+        <button class="icon-btn-top" id="btn-dark-top" onclick="toggleDarkMode()" title="Modo Oscuro Puro">🌙</button>
+        <button class="icon-btn-top" onclick="toggleZenMode()" title="Modo Enfoque (Zen)">🧘</button>
+        <button class="btn-top-action" onclick="openSaveModal('pdf')">🖨️ PDF</button>
+        <button class="btn-top-share" onclick="quickNativeShare()" title="Compartir directo a WhatsApp/Telegram">📤</button>
+      </div>
     </div>
 
-    <div class="top-center">
-      <input type="text" id="docNameInput" class="doc-title-input" value="Documento 1" title="Cambiar nombre del archivo" />
-    </div>
+    <!-- 2. BARRA DE PESTAÑAS (TABS) -->
+    <nav class="menu-row">
+      <div class="tabs-scroll">
+        <button class="tab-btn file-tab" data-tab="panel-archivo" onclick="switchTab('panel-archivo', this)">Archivo</button>
+        <button class="tab-btn active" data-tab="panel-inicio" onclick="switchTab('panel-inicio', this)">Inicio</button>
+        <button class="tab-btn" data-tab="panel-insertar" onclick="switchTab('panel-insertar', this)">Insertar</button>
+        <button class="tab-btn" data-tab="panel-disposicion" onclick="switchTab('panel-disposicion', this)">Disposición</button>
+        <button class="tab-btn" data-tab="panel-vista" onclick="switchTab('panel-vista', this)">Vista e IA</button>
+      </div>
+      <div class="menu-quick-right">
+        <button class="quick-pill-btn" onclick="openSaveModal('doc')">⬇ .DOC</button>
+        <button class="quick-pill-btn accent" onclick="openSaveModal('pdf')">Guardar Como</button>
+      </div>
+    </nav>
 
-    <div class="top-right">
-      <button class="icon-btn-top" onclick="clearDocument()" title="Hoja nueva en blanco">📄</button>
-      <div class="user-badge" title="MicroWord NART">NR</div>
-    </div>
-  </div>
+    <!-- 3. CINTA DE OPCIONES (RIBBON PANELS) -->
+    <div class="ribbon-wrapper" id="ribbon-wrapper">
 
-  <!-- 2. PESTAÑAS + BOTONES DE GUARDAR PDF / DOC -->
-  <div class="menu-row">
-    <div class="tabs-scroll">
-      <button class="tab-btn file-tab" onclick="openSaveModal('pdf')">Archivo</button>
-      <button class="tab-btn active" onclick="switchTab('inicio', this)">Inicio</button>
-      <button class="tab-btn" onclick="switchTab('insertar', this)">Insertar</button>
-      <button class="tab-btn" onclick="switchTab('diseno', this)">Diseño</button>
-      <button class="tab-btn" onclick="switchTab('disposicion', this)">Disposición</button>
-      <button class="tab-btn" onclick="switchTab('referencias', this)">Referencias</button>
-      <button class="tab-btn" onclick="switchTab('revisar', this)">Revisar</button>
-      <button class="tab-btn" onclick="switchTab('vista', this)">Vista</button>
-    </div>
-
-    <div class="action-buttons">
-      <button class="btn-doc" onclick="openSaveModal('doc')">⬇ .DOC</button>
-      <button class="btn-pdf" onclick="openSaveModal('pdf')">🖨️ Guardar PDF</button>
-    </div>
-  </div>
-
-  <!-- 3. CINTA DE OPCIONES (RIBBON COMPLETO) -->
-  <div class="ribbon-wrapper">
-
-    <!-- ================= PESTAÑA INICIO ================= -->
-    <div id="tab-inicio" class="ribbon-panel active">
-      <!-- Grupo Portapapeles -->
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="btn-paste-big" onclick="pasteClipboard()">
-            <span>📋</span>Pegar
-          </button>
-          <div class="section-rows">
-            <button class="tool-btn" onclick="execCmd('cut')">✂️ Cortar</button>
-            <button class="tool-btn" onclick="execCmd('copy')">📄 Copiar</button>
+      <!-- ==================== PANEL 1: ARCHIVO Y EXPORTACIÓN ==================== -->
+      <div id="panel-archivo" class="ribbon-panel">
+        <!-- Grupo: Documento -->
+        <div class="ribbon-section">
+          <div class="section-body">
+            <button class="tool-btn-big" onclick="createNewDocument()">
+              <span class="big-icon">📄</span>
+              <span>Nuevo</span>
+            </button>
+            <button class="tool-btn-big" onclick="triggerOpenFile()">
+              <span class="big-icon">📂</span>
+              <span>Abrir Archivo</span>
+            </button>
+            <button class="tool-btn-big" onclick="openSaveModal('pdf')">
+              <span class="big-icon">💾</span>
+              <span>Guardar Como</span>
+            </button>
           </div>
+          <div class="section-label">Documento Local</div>
         </div>
-        <div class="section-label">Portapapeles</div>
-      </div>
 
-      <!-- Grupo Fuente -->
-      <div class="ribbon-section">
-        <div class="section-body">
+        <!-- Grupo: Exportación Avanzada -->
+        <div class="ribbon-section">
           <div class="section-rows">
             <div class="tool-row">
-              <select id="fontName" class="tool-select" onchange="execCmd('fontName', this.value)">
-                <option value="Calibri">Calibri</option>
-                <option value="Arial">Arial</option>
-                <option value="Times New Roman">Times New Roman</option>
-                <option value="Georgia">Georgia</option>
-                <option value="Verdana">Verdana</option>
-                <option value="Courier New">Courier New</option>
+              <button class="tool-btn accent-btn" onclick="exportNativePDF(false)">🖨️ Exportar PDF (A4 Exacto)</button>
+              <button class="tool-btn" onclick="exportNativePDF(true)" title="Comprime imágenes para que pese poco en WhatsApp">⚡ PDF Ligero (WhatsApp)</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn" onclick="exportLongImage()">🖼️ Exportar Imagen Larga (JPG)</button>
+              <button class="tool-btn" onclick="exportWordDoc(false)">📘 Descargar .DOC</button>
+            </div>
+          </div>
+          <div class="section-label">Exportación Directa</div>
+        </div>
+
+        <!-- Grupo: Compartir y Privacidad -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <button class="tool-btn share-wa-btn" onclick="shareDocumentDirect('pdf')">📲 Enviar PDF a WhatsApp / Apps</button>
+              <button class="tool-btn" onclick="shareDocumentDirect('doc')">📤 Compartir .DOC</button>
+            </div>
+            <div class="tool-row">
+              <label class="tool-check-label" title="Limpia autor, fecha de edición y rastro del teléfono">
+                <input type="checkbox" id="chk-anonymous-meta" checked />
+                🛡️ Cero Metadatos (Anónimo)
+              </label>
+              <button class="tool-btn" onclick="openModal('modal-history')">🕒 Historial (Máquina del Tiempo)</button>
+            </div>
+          </div>
+          <div class="section-label">Compartir y Privacidad</div>
+        </div>
+      </div>
+
+      <!-- ==================== PANEL 2: INICIO (FORMATO PRINCIPAL) ==================== -->
+      <div id="panel-inicio" class="ribbon-panel active">
+        
+        <!-- Grupo: Portapapeles Nativo (Bug #4 Resuelto) -->
+        <div class="ribbon-section">
+          <div class="section-body">
+            <button class="tool-btn-big" onmousedown="event.preventDefault()" onclick="nativePaste()">
+              <span class="big-icon">📋</span>
+              <span>Pegar</span>
+            </button>
+            <div class="section-rows">
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="nativeCut()">✂️ Cortar</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="nativeCopy()">📄 Copiar</button>
+              <button class="tool-btn" id="btn-format-painter" onmousedown="event.preventDefault()" onclick="toggleFormatPainter()" title="Copiar estilo del texto">🖌️ Copiar Formato</button>
+            </div>
+          </div>
+          <div class="section-label">Portapapeles</div>
+        </div>
+
+        <!-- Grupo: Fuente y Tipografía (Bugs #1 y #2 Resueltos + Fuentes Custom) -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <!-- Selector de Fuentes con guardado de selección previo -->
+              <select id="font-family-select" class="tool-select font-select" onmousedown="saveSelection()" onchange="applyFontFamily(this.value)" title="Familia tipográfica">
+                <optgroup label="Estándar de Oficina">
+                  <option value="Calibri, sans-serif" selected>Calibri</option>
+                  <option value="Arial, sans-serif">Arial</option>
+                  <option value="'Times New Roman', serif">Times New Roman</option>
+                  <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                  <option value="Georgia, serif">Georgia</option>
+                  <option value="Verdana, sans-serif">Verdana</option>
+                  <option value="Tahoma, sans-serif">Tahoma</option>
+                  <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                </optgroup>
+                <optgroup label="Diseño y Editorial (Serifa / Sans)">
+                  <option value="Garamond, serif">Garamond</option>
+                  <option value="'Palatino Linotype', serif">Palatino</option>
+                  <option value="Baskerville, serif">Baskerville</option>
+                  <option value="Didot, serif">Didot</option>
+                  <option value="'Book Antiqua', serif">Book Antiqua</option>
+                  <option value="Impact, sans-serif">Impact</option>
+                  <option value="'Century Gothic', sans-serif">Century Gothic</option>
+                  <option value="'Franklin Gothic Medium', sans-serif">Franklin Gothic</option>
+                </optgroup>
+                <optgroup label="Código y Monoespaciado">
+                  <option value="'Courier New', monospace">Courier New</option>
+                  <option value="Consolas, monospace">Consolas</option>
+                  <option value="'Lucida Console', monospace">Lucida Console</option>
+                  <option value="Monaco, monospace">Monaco</option>
+                </optgroup>
+                <optgroup label="Creativas y Manuscritas">
+                  <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                  <option value="'Brush Script MT', cursive">Brush Script</option>
+                  <option value="Copperplate, fantasy">Copperplate</option>
+                  <option value="Papyrus, fantasy">Papyrus</option>
+                </optgroup>
+                <optgroup id="custom-fonts-optgroup" label="Mis Fuentes Instaladas (.TTF/.OTF)">
+                  <!-- Aquí se inyectan las fuentes locales instaladas por el usuario -->
+                </optgroup>
               </select>
-              <select id="fontSize" class="tool-select" onchange="changeFontSizePt(this.value)">
-                <option value="9pt">9</option>
-                <option value="10pt">10</option>
-                <option value="11pt" selected>11</option>
-                <option value="12pt">12</option>
-                <option value="14pt">14</option>
-                <option value="16pt">16</option>
-                <option value="18pt">18</option>
-                <option value="24pt">24</option>
-                <option value="36pt">36</option>
+
+              <!-- Selector exacto de Tamaño en Puntos (pt) -->
+              <select id="font-size-select" class="tool-select size-select" onmousedown="saveSelection()" onchange="applyFontSizePt(this.value)" title="Tamaño de fuente (pt)">
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11" selected>11</option>
+                <option value="12">12</option>
+                <option value="14">14</option>
+                <option value="16">16</option>
+                <option value="18">18</option>
+                <option value="20">20</option>
+                <option value="22">22</option>
+                <option value="24">24</option>
+                <option value="26">26</option>
+                <option value="28">28</option>
+                <option value="36">36</option>
+                <option value="48">48</option>
+                <option value="72">72</option>
               </select>
-              <button class="tool-btn" onclick="stepFontSize(2)" title="Aumentar fuente">A▲</button>
-              <button class="tool-btn" onclick="stepFontSize(-2)" title="Disminuir fuente">A▼</button>
-              <button class="tool-btn" onclick="execCmd('removeFormat')" title="Borrar formato">🧹</button>
+
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="stepFontSize(2)" title="Aumentar tamaño">A▲</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="stepFontSize(-2)" title="Disminuir tamaño">A▼</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="triggerInstallFont()" title="Instalar fuente .TTF / .OTF desde el teléfono">➕ Fuente</button>
             </div>
 
             <div class="tool-row">
-              <button id="btn-bold" class="tool-btn" onclick="execCmd('bold')"><b>B</b></button>
-              <button id="btn-italic" class="tool-btn" onclick="execCmd('italic')"><i>I</i></button>
-              <button id="btn-underline" class="tool-btn" onclick="execCmd('underline')"><u>U</u></button>
-              <button id="btn-strike" class="tool-btn" onclick="execCmd('strikeThrough')"><s>abc</s></button>
-              <button id="btn-sub" class="tool-btn" onclick="execCmd('subscript')">x₂</button>
-              <button id="btn-sup" class="tool-btn" onclick="execCmd('superscript')">x²</button>
+              <button class="tool-btn" id="btn-bold" onmousedown="event.preventDefault()" onclick="execCmd('bold')" title="Negrita"><b>N</b></button>
+              <button class="tool-btn" id="btn-italic" onmousedown="event.preventDefault()" onclick="execCmd('italic')" title="Cursiva"><i>K</i></button>
+              <button class="tool-btn" id="btn-underline" onmousedown="event.preventDefault()" onclick="execCmd('underline')" title="Subrayado"><u>S</u></button>
+              <button class="tool-btn" id="btn-strike" onmousedown="event.preventDefault()" onclick="execCmd('strikeThrough')" title="Tachado"><s>abc</s></button>
+              <button class="tool-btn" id="btn-sub" onmousedown="event.preventDefault()" onclick="execCmd('subscript')" title="Subíndice">x₂</button>
+              <button class="tool-btn" id="btn-sup" onmousedown="event.preventDefault()" onclick="execCmd('superscript')" title="Superíndice">x²</button>
+              
+              <select class="tool-select" onmousedown="saveSelection()" onchange="changeTextCase(this.value)" title="Cambiar Mayúsculas/Minúsculas">
+                <option value="">Aa</option>
+                <option value="upper">MAYÚSCULAS</option>
+                <option value="lower">minúsculas</option>
+                <option value="capitalize">Tipo Título</option>
+              </select>
 
-              <!-- Resaltador corregido (solo pinta el texto, nunca la hoja) -->
-              <div class="color-tool" title="Color de resaltado de texto">
-                <button class="tool-btn" style="border:none;height:22px;padding:0 4px;" onclick="applyHighlight(document.getElementById('hilitePicker').value)">🖍️</button>
-                <input type="color" id="hilitePicker" value="#ffff00" onchange="applyHighlight(this.value)">
-                <button class="tool-btn" style="border:none;height:22px;padding:0 4px;" onclick="removeHighlight()" title="Quitar resaltado">🚫</button>
+              <!-- Color de Fuente -->
+              <div class="color-tool" onmousedown="saveSelection()" title="Color de fuente">
+                <span>A</span>
+                <input type="color" id="input-forecolor" value="#000000" onchange="applyTextColor(this.value)" />
               </div>
 
-              <!-- Color de fuente -->
-              <div class="color-tool" title="Color de fuente">
-                <span style="font-weight:700;font-size:12px;color:#D83B01;padding-left:3px;">A</span>
-                <input type="color" id="forePicker" value="#000000" onchange="execCmd('foreColor', this.value)">
+              <!-- Resaltador Inteligente (Sólo texto seleccionado) -->
+              <div class="color-tool" onmousedown="saveSelection()" title="Color de resaltado de texto">
+                <span>🖍️</span>
+                <input type="color" id="input-hilitecolor" value="#ffff00" onchange="applyHighlightColor(this.value)" />
+                <button class="mini-clear-btn" onmousedown="event.preventDefault()" onclick="applyHighlightColor('transparent')" title="Quitar resaltado">✕</button>
+              </div>
+
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="clearSelectionFormatting()" title="Borrar todo el formato">🧹</button>
+            </div>
+          </div>
+          <div class="section-label">Fuente y Tipografía</div>
+        </div>
+
+        <!-- Grupo: Párrafo y Listas -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="execCmd('insertUnorderedList')" title="Viñetas">• Lista</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="execCmd('insertOrderedList')" title="Numeración">1. Lista</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="execCmd('outdent')" title="Disminuir sangría">⇤</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="execCmd('indent')" title="Aumentar sangría">⇥</button>
+              
+              <select id="line-height-select" class="tool-select" onmousedown="saveSelection()" onchange="applyLineHeight(this.value)" title="Interlineado">
+                <option value="">↕ Espaciado</option>
+                <option value="1.0">1.0 Simple</option>
+                <option value="1.15">1.15 Normal</option>
+                <option value="1.5" selected>1.5 Medio</option>
+                <option value="2.0">2.0 Doble</option>
+                <option value="2.5">2.5 Amplio</option>
+              </select>
+            </div>
+
+            <div class="tool-row">
+              <button class="tool-btn" id="btn-align-left" onmousedown="event.preventDefault()" onclick="execCmd('justifyLeft')" title="Alinear a la izquierda">⬅ Izq</button>
+              <button class="tool-btn" id="btn-align-center" onmousedown="event.preventDefault()" onclick="execCmd('justifyCenter')" title="Centrar">⬌ Cen</button>
+              <button class="tool-btn" id="btn-align-right" onmousedown="event.preventDefault()" onclick="execCmd('justifyRight')" title="Alinear a la derecha">➡ Der</button>
+              <button class="tool-btn" id="btn-align-justify" onmousedown="event.preventDefault()" onclick="execCmd('justifyFull')" title="Justificar">☰ Just</button>
+              <div class="color-tool" onmousedown="saveSelection()" title="Sombreado de párrafo">
+                <span>🪣</span>
+                <input type="color" value="#f3f2f1" onchange="applyParagraphBg(this.value)" />
               </div>
             </div>
           </div>
+          <div class="section-label">Párrafo</div>
         </div>
-        <div class="section-label">Fuente</div>
+
+        <!-- Grupo: Estilos Rápidos de Word -->
+        <div class="ribbon-section">
+          <div class="section-body">
+            <button class="style-card" onmousedown="event.preventDefault()" onclick="applyQuickStyle('normal')">
+              <span class="st-preview-normal">AaBbCc</span>
+              <span class="st-name">Normal</span>
+            </button>
+            <button class="style-card" onmousedown="event.preventDefault()" onclick="applyQuickStyle('h1')">
+              <span class="st-preview-h1">AaBbCc</span>
+              <span class="st-name">Título 1</span>
+            </button>
+            <button class="style-card" onmousedown="event.preventDefault()" onclick="applyQuickStyle('h2')">
+              <span class="st-preview-h2">AaBbCc</span>
+              <span class="st-name">Título 2</span>
+            </button>
+            <button class="style-card" onmousedown="event.preventDefault()" onclick="applyQuickStyle('quote')">
+              <span class="st-preview-quote">“Cita”</span>
+              <span class="st-name">Cita</span>
+            </button>
+          </div>
+          <div class="section-label">Estilos Rápidos</div>
+        </div>
+
       </div>
 
-      <!-- Grupo Párrafo -->
-      <div class="ribbon-section">
-        <div class="section-body">
+      <!-- ==================== PANEL 3: INSERTAR (ELEMENTOS PRO) ==================== -->
+      <div id="panel-insertar" class="ribbon-panel">
+        
+        <!-- Grupo: Páginas -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <button class="tool-btn" onmousedown="event.preventDefault()" onclick="insertBlankPage()">📄 Página en Blanco</button>
+            <button class="tool-btn" onmousedown="event.preventDefault()" onclick="insertPageBreak()">✂️ Salto de Página</button>
+          </div>
+          <div class="section-label">Páginas</div>
+        </div>
+
+        <!-- Grupo: Tablas -->
+        <div class="ribbon-section">
           <div class="section-rows">
             <div class="tool-row">
-              <button id="btn-ul" class="tool-btn" onclick="execCmd('insertUnorderedList')" title="Viñetas">•≡</button>
-              <button id="btn-ol" class="tool-btn" onclick="execCmd('insertOrderedList')" title="Numeración">1≡</button>
-              <button class="tool-btn" onclick="execCmd('outdent')" title="Disminuir sangría">⇤</button>
-              <button class="tool-btn" onclick="execCmd('indent')" title="Aumentar sangría">⇥</button>
-              <select class="tool-select" onchange="setLineHeight(this.value)" title="Interlineado">
-                <option value="1.0">↕ 1.0</option>
-                <option value="1.15" selected>↕ 1.15</option>
-                <option value="1.5">↕ 1.5</option>
-                <option value="2.0">↕ 2.0</option>
+              <button class="tool-btn accent-btn" onmousedown="saveSelection()" onclick="openModal('modal-table')">▦ Insertar Tabla</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="modifyActiveTable('addRow')">+ Fila</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="modifyActiveTable('addCol')">+ Col</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="modifyActiveTable('delRow')">- Fila</button>
+              <button class="tool-btn" onmousedown="event.preventDefault()" onclick="modifyActiveTable('delCol')">- Col</button>
+            </div>
+          </div>
+          <div class="section-label">Tablas</div>
+        </div>
+
+        <!-- Grupo: Ilustraciones e Imágenes Inmunes -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="triggerInsertImage('inline')">🖼️ Imagen en Línea</button>
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="triggerInsertImage('float')" title="Flota libre sin romper el texto">🚀 Imagen Libre (Flotante)</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="triggerInsertImage('watermark')" title="Se coloca detrás del texto">💧 Marca de Agua</button>
+              <select class="tool-select" onmousedown="saveSelection()" onchange="insertShape(this.value); this.value='';">
+                <option value="">⬡ Formas...</option>
+                <option value="hr">― Línea Horizontal</option>
+                <option value="box">▭ Cuadro de Texto</option>
+                <option value="circle">◯ Círculo / Sello</option>
+                <option value="arrow">➔ Flecha Destacada</option>
               </select>
             </div>
-            <div class="tool-row">
-              <button id="btn-left" class="tool-btn active" onclick="execCmd('justifyLeft')" title="Alinear a la izquierda">⬅</button>
-              <button id="btn-center" class="tool-btn" onclick="execCmd('justifyCenter')" title="Centrar">↔</button>
-              <button id="btn-right" class="tool-btn" onclick="execCmd('justifyRight')" title="Alinear a la derecha">➡</button>
-              <button id="btn-full" class="tool-btn" onclick="execCmd('justifyFull')" title="Justificar">☰</button>
-            </div>
           </div>
+          <div class="section-label">Ilustraciones</div>
         </div>
-        <div class="section-label">Párrafo</div>
-      </div>
 
-      <!-- Grupo Estilos -->
-      <div class="ribbon-section">
-        <div class="section-body">
-          <div class="styles-gallery">
-            <div class="style-card active" onclick="applyQuickStyle('P', '11pt', '#000000', false, this)">
-              <span class="style-preview">AaBbCcDd</span>
-              <span class="style-name">Normal</span>
-            </div>
-            <div class="style-card" onclick="applyQuickStyle('H1', '20pt', '#185ABD', false, this)">
-              <span class="style-preview" style="color:#185ABD;font-size:15px;">AaBbCcDd</span>
-              <span class="style-name">Título 1</span>
-            </div>
-            <div class="style-card" onclick="applyQuickStyle('H2', '15pt', '#103F91', false, this)">
-              <span class="style-preview" style="color:#103F91;font-weight:600;">AaBbCcDd</span>
-              <span class="style-name">Título 2</span>
-            </div>
-            <div class="style-card" onclick="applyQuickStyle('H3', '13pt', '#323130', true, this)">
-              <span class="style-preview" style="font-style:italic;">AaBbCcDd</span>
-              <span class="style-name">Subtítulo</span>
-            </div>
-            <div class="style-card" onclick="applyQuickStyle('BLOCKQUOTE', '11pt', '#555555', true, this)">
-              <span class="style-preview" style="color:#666;font-style:italic;">"Cita"</span>
-              <span class="style-name">Cita</span>
-            </div>
-          </div>
-        </div>
-        <div class="section-label">Estilos</div>
-      </div>
-
-      <!-- Grupo Edición -->
-      <div class="ribbon-section">
-        <div class="section-body">
+        <!-- Grupo: Herramientas para Desarrolladores / Estudiantes -->
+        <div class="ribbon-section">
           <div class="section-rows">
-            <button class="tool-btn" onclick="findAndReplace()">🔍 Buscar y reemplazar</button>
-            <button class="tool-btn" onclick="execCmd('selectAll')">☑️ Seleccionar todo</button>
+            <div class="tool-row">
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="openModal('modal-signature')">✍️ Dibujar Firma</button>
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="openModal('modal-code')">💻 Bloque de Código</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="triggerCameraOCR()">📷 Escáner OCR (Cámara)</button>
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="insertHyperlink()">🔗 Vínculo</button>
+            </div>
           </div>
+          <div class="section-label">Avanzado y Dev</div>
         </div>
-        <div class="section-label">Edición</div>
+
+        <!-- Grupo: Encabezado, Pie y Numeración con Rango (Petición Especial) -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <button class="tool-btn" onclick="toggleHeaderFooterEdit('header')">⬆️ Editar Encabezado</button>
+              <button class="tool-btn" onclick="toggleHeaderFooterEdit('footer')">⬇️ Editar Pie de Página</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn accent-btn" onclick="openModal('modal-pagenumbers')">🔢 Número de Página (Rangos)</button>
+            </div>
+          </div>
+          <div class="section-label">Encabezado y Pie</div>
+        </div>
+
+        <!-- Grupo: Fecha y Hora Elegible (Bug #5 Resuelto) y Símbolos -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="openModal('modal-datetime')">📅 Fecha y Hora...</button>
+              <button class="tool-btn" onmousedown="saveSelection()" onclick="insertMagicVariablePrompt()">✨ Variable {{Campo}}</button>
+            </div>
+            <div class="tool-row">
+              <select class="tool-select" onmousedown="saveSelection()" onchange="insertSymbol(this.value); this.value='';">
+                <option value="">Ω Símbolos / Math</option>
+                <option value="©">© Copyright</option>
+                <option value="®">® Registrado</option>
+                <option value="™">™ Trademark</option>
+                <option value="±">± Más/Menos</option>
+                <option value="≠">≠ Diferente</option>
+                <option value="≤">≤ Menor o igual</option>
+                <option value="≥">≥ Mayor o igual</option>
+                <option value="÷">÷ División</option>
+                <option value="×">× Multiplicación</option>
+                <option value="√">√ Raíz cuadrada</option>
+                <option value="∞">∞ Infinito</option>
+                <option value="π">π Pi</option>
+                <option value="∑">∑ Sumatoria</option>
+                <option value="Δ">Δ Delta</option>
+                <option value="C$">C$ Córdobas</option>
+                <option value="$">$ Dólares</option>
+                <option value="€">€ Euros</option>
+              </select>
+            </div>
+          </div>
+          <div class="section-label">Texto y Símbolos</div>
+        </div>
+
+      </div>
+
+      <!-- ==================== PANEL 4: DISPOSICIÓN (CONFIGURACIÓN DE HOJA) ==================== -->
+      <div id="panel-disposicion" class="ribbon-panel">
+        
+        <!-- Grupo: Márgenes -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <select id="select-margins" class="tool-select" onchange="setPageMargins(this.value)">
+              <option value="25.4mm" selected>📏 Normal (2.54 cm)</option>
+              <option value="12.7mm">📏 Estrecho (1.27 cm)</option>
+              <option value="19.1mm">📏 Moderado (1.91 cm)</option>
+              <option value="38.1mm">📏 Ancho (3.81 cm)</option>
+              <option value="8mm">📏 Mínimo Móvil (0.8 cm)</option>
+            </select>
+            <div class="tool-row">
+              <button class="tool-btn" id="btn-orient-portrait" onclick="setPageOrientation('portrait')">📄 Vertical</button>
+              <button class="tool-btn" id="btn-orient-landscape" onclick="setPageOrientation('landscape')">🖼️ Horizontal</button>
+            </div>
+          </div>
+          <div class="section-label">Márgenes y Orientación (Bug #6 Resuelto)</div>
+        </div>
+
+        <!-- Grupo: Tamaños de Hoja (A4, Carta, Oficio, etc.) -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <select id="select-paper-size" class="tool-select" onchange="setPaperSize(this.value)">
+              <option value="a4" selected>📐 A4 (210 x 297 mm)</option>
+              <option value="letter">📐 Carta / Letter (216 x 279 mm)</option>
+              <option value="legal">📐 Oficio / Legal (216 x 356 mm)</option>
+              <option value="executive">📐 Ejecutivo (184 x 267 mm)</option>
+              <option value="a5">📐 A5 Cuaderno (148 x 210 mm)</option>
+            </select>
+            <div class="tool-row">
+              <button class="tool-btn" onclick="setPageColumns(1)">1 Columna</button>
+              <button class="tool-btn" onclick="setPageColumns(2)">2 Columnas</button>
+              <button class="tool-btn" onclick="setPageColumns(3)">3 Columnas</button>
+            </div>
+          </div>
+          <div class="section-label">Tamaño de Papel y Columnas</div>
+        </div>
+
+        <!-- Grupo: Fondo y Bordes de Hoja -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <div class="color-tool" title="Color de la hoja de papel">
+                <span>🎨 Color de Página</span>
+                <input type="color" value="#ffffff" onchange="setPaperCustomColor(this.value)" />
+              </div>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn" onclick="togglePageBorder()">🔲 Borde de Página</button>
+              <button class="tool-btn" onclick="promptTextWatermark()">🔤 Marca de Agua Texto</button>
+            </div>
+          </div>
+          <div class="section-label">Fondo de Página</div>
+        </div>
+
+      </div>
+
+      <!-- ==================== PANEL 5: VISTA, REVISIÓN E IA LOCAL ==================== -->
+      <div id="panel-vista" class="ribbon-panel">
+        
+        <!-- Grupo: Modos de Experiencia Móvil -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <button class="tool-btn" id="btn-reflow-mode" onclick="toggleReflowMode()" title="Adapta el texto al ancho del celular sin perder el A4 al imprimir">📱 Modo Lectura (Reflow)</button>
+              <button class="tool-btn" id="btn-thumb-mode" onclick="toggleThumbMode()" title="Pone todas las barras abajo para usar con una mano">👇 Modo Pulgar</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn" id="btn-dark-mode" onclick="toggleDarkMode()">🌙 Modo Oscuro Puro</button>
+              <button class="tool-btn" onclick="toggleZenMode()">🧘 Modo Enfoque (Zen)</button>
+            </div>
+          </div>
+          <div class="section-label">Vistas Móviles</div>
+        </div>
+
+        <!-- Grupo: Revisión y Ortografía (Bug #7 Resuelto con indicador visual) -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <button class="tool-btn active" id="btn-spellcheck" onclick="toggleSpellcheck()" title="Muestra claramente si el corrector está encendido o apagado">
+                ✔️ Corrector: <span id="spellcheck-state-txt">ACTIVO</span>
+              </button>
+              <button class="tool-btn" onclick="openModal('modal-find')">🔍 Buscar y Reemplazar</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn" onclick="showDocumentStats()">📊 Contar Palabras</button>
+              <button class="tool-btn" id="btn-markdown-toggle" onclick="toggleMarkdownLive()">⚡ Markdown Vivo: ON</button>
+            </div>
+          </div>
+          <div class="section-label">Revisión y Edición</div>
+        </div>
+
+        <!-- Grupo: Inteligencia Artificial Local (Ollama / Offline) y Plantillas -->
+        <div class="ribbon-section">
+          <div class="section-rows">
+            <div class="tool-row">
+              <select id="select-ai-action" class="tool-select">
+                <option value="grammar">✨ Corregir Ortografía y Gramática</option>
+                <option value="formal">👔 Hacer Tono más Profesional</option>
+                <option value="summarize">📝 Resumir Texto Seleccionado</option>
+                <option value="expand">➕ Expandir y Detallar Idea</option>
+              </select>
+              <button class="tool-btn accent-btn" onmousedown="saveSelection()" onclick="runLocalAI()">🤖 Ejecutar IA</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool-btn" onclick="scanAndFillMagicVariables()">🪄 Rellenar Variables {{...}}</button>
+              <button class="tool-btn" onclick="configureOllamaUrl()" title="Configurar puerto local de Ollama/GGUF">⚙️ Config IA</button>
+            </div>
+          </div>
+          <div class="section-label">Asistente IA Local & Plantillas</div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- 4. REGLA HORIZONTAL SUPERIOR -->
+    <div class="ruler-bar" id="ruler-bar">
+      <div class="ruler-inner" id="ruler-inner">
+        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span>
       </div>
     </div>
 
-    <!-- ================= PESTAÑA INSERTAR ================= -->
-    <div id="tab-insertar" class="ribbon-panel">
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="insertPageBreak()">📄 Salto de línea doble</button>
-        </div>
-        <div class="section-label">Páginas</div>
+  </header>
+
+  <!-- ==================== ÁREA DE TRABAJO CENTRAL (WORKSPACE & LIENZO) ==================== -->
+  <main class="workspace" id="workspace">
+    
+    <!-- Contenedor maestro del documento -->
+    <div id="document-stage" class="document-stage">
+      
+      <!-- Banda de Encabezado (Oculta si está vacía) -->
+      <div id="doc-header-band" class="doc-header-band" contenteditable="false" data-placeholder="Escribe el encabezado aquí..."></div>
+
+      <!-- Capa de Marca de Agua -->
+      <div id="doc-watermark-layer" class="doc-watermark-layer"></div>
+
+      <!-- LIENZO PRINCIPAL EDITABLE (HOJA DE WORD) -->
+      <div id="editor" class="page-sheet" contenteditable="true" spellcheck="true">
+        <p><br></p>
       </div>
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="insertTable()">⊞ Insertar Tabla</button>
-        </div>
-        <div class="section-label">Tablas</div>
+
+      <!-- Banda de Pie de Página y Numeración Dinámica -->
+      <div id="doc-footer-band" class="doc-footer-band">
+        <div id="footer-custom-text" class="footer-custom-text" contenteditable="false" data-placeholder="Escribe el pie de página aquí..."></div>
+        <div id="footer-page-number" class="footer-page-number"></div>
       </div>
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="document.getElementById('imgUpload').click()">🖼️ Imagen desde dispositivo</button>
-          <input type="file" id="imgUpload" accept="image/*" style="display:none" onchange="insertImageFile(this)">
-          <button class="tool-btn" onclick="execCmd('insertHorizontalRule')">― Línea divisoria</button>
-        </div>
-        <div class="section-label">Ilustraciones</div>
-      </div>
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="insertLink()">🔗 Vínculo</button>
-          <button class="tool-btn" onclick="insertDate()">📅 Fecha y hora</button>
-        </div>
-        <div class="section-label">Vínculos y Fecha</div>
-      </div>
+
     </div>
 
-    <!-- ================= PESTAÑA DISEÑO ================= -->
-    <div id="tab-diseno" class="ribbon-panel">
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="togglePageBorder()">▣ Borde de página</button>
-        </div>
-        <div class="section-label">Bordes</div>
-      </div>
-    </div>
+  </main>
 
-    <!-- ================= PESTAÑA DISPOSICIÓN ================= -->
-    <div id="tab-disposicion" class="ribbon-panel">
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="setMargins('12px')">Márgenes Estrechos</button>
-          <button class="tool-btn" onclick="setMargins('22px')">Márgenes Normales</button>
-          <button class="tool-btn" onclick="setMargins('38px')">Márgenes Anchos</button>
-        </div>
-        <div class="section-label">Márgenes</div>
-      </div>
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="setOrientation('portrait')">📄 Vertical</button>
-          <button class="tool-btn" onclick="setOrientation('landscape')">🖼️ Horizontal</button>
-        </div>
-        <div class="section-label">Orientación</div>
-      </div>
-    </div>
-
-    <!-- ================= PESTAÑA REFERENCIAS ================= -->
-    <div id="tab-referencias" class="ribbon-panel">
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="insertTOC()">📑 Insertar Índice Automático</button>
-          <button class="tool-btn" onclick="insertFootnote()">¹ Insertar Nota al pie</button>
-        </div>
-        <div class="section-label">Tabla de contenido y Notas</div>
-      </div>
-    </div>
-
-    <!-- ================= PESTAÑA REVISAR ================= -->
-    <div id="tab-revisar" class="ribbon-panel">
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="showStats()">📊 Contar palabras y caracteres</button>
-          <button class="tool-btn" onclick="toggleSpellcheck()">✔️ Corrector ortográfico</button>
-        </div>
-        <div class="section-label">Revisión</div>
-      </div>
-    </div>
-
-    <!-- ================= PESTAÑA VISTA ================= -->
-    <div id="tab-vista" class="ribbon-panel">
-      <div class="ribbon-section">
-        <div class="section-body">
-          <button class="tool-btn" onclick="toggleRuler()">📏 Mostrar/Ocultar Regla</button>
-          <button class="tool-btn" onclick="setZoom(85)">Zoom 85%</button>
-          <button class="tool-btn" onclick="setZoom(100)">Zoom 100%</button>
-          <button class="tool-btn" onclick="setZoom(125)">Zoom 125%</button>
-        </div>
-        <div class="section-label">Zoom y Vista</div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- 4. REGLA MILIMETRADA SUPERIOR -->
-  <div id="rulerBar" class="ruler-bar">
-    <div class="ruler-inner">
-      <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
-    </div>
-  </div>
-
-  <!-- 5. ÁREA DE TRABAJO (HOJA 100% EN BLANCO AL INICIAR) -->
-  <div class="workspace">
-    <div id="editor" class="page-sheet" contenteditable="true" spellcheck="true"><p><br></p></div>
-  </div>
-
-  <!-- 6. BARRA DE ESTADO INFERIOR -->
-  <div class="status-bar">
+  <!-- ==================== BARRA DE ESTADO INFERIOR ==================== -->
+  <footer class="status-bar" id="status-bar">
     <div class="status-left">
-      <span>Página 1 de 1</span>
-      <span id="wordCount">0 palabras</span>
-      <span>🌐 Español</span>
-      <span id="saveStatus">✓ Guardado</span>
+      <span id="status-pages">Pág. 1 de 1</span>
+      <span>|</span>
+      <span id="status-words">0 palabras</span>
+      <span>|</span>
+      <span id="status-PaperInfo">A4 Vertical</span>
+      <span>|</span>
+      <span id="status-save-indicator">✓ Guardado local</span>
     </div>
     <div class="status-right">
-      <button class="icon-btn-top" style="width:22px;height:22px;" onclick="setZoom(Math.max(60, currentZoom - 10))">−</button>
-      <input type="range" id="zoomSlider" class="zoom-slider" min="60" max="150" value="100" oninput="setZoom(this.value)">
-      <button class="icon-btn-top" style="width:22px;height:22px;" onclick="setZoom(Math.min(150, currentZoom + 10))">+</button>
-      <span id="zoomLabel">100%</span>
+      <button class="status-mini-btn" onclick="stepZoom(-10)">−</button>
+      <input type="range" id="zoom-slider" class="zoom-slider" min="50" max="150" value="100" oninput="setDocumentZoom(this.value)" />
+      <button class="status-mini-btn" onclick="stepZoom(10)">+</button>
+      <span id="zoom-label">100%</span>
+    </div>
+  </footer>
+
+  <!-- ==================== INPUTS OCULTOS PARA ARCHIVOS, FUENTES Y CÁMARA ==================== -->
+  <!-- Abrir .doc, .docx, .html, .txt -->
+  <input type="file" id="hidden-file-open" accept=".doc,.docx,.html,.htm,.txt,.md" style="display:none" onchange="handleFileOpen(event)" />
+  <!-- Instalar fuentes .ttf, .otf, .woff -->
+  <input type="file" id="hidden-font-input" accept=".ttf,.otf,.woff,.woff2" style="display:none" onchange="handleFontInstall(event)" />
+  <!-- Insertar imágenes -->
+  <input type="file" id="hidden-image-input" accept="image/*" style="display:none" onchange="handleImageInsert(event)" />
+  <!-- Cámara para Escáner OCR -->
+  <input type="file" id="hidden-ocr-input" accept="image/*" capture="environment" style="display:none" onchange="handleOcrCapture(event)" />
+
+  <!-- ==========================================================================
+       VENTANAS MODALES (POPUPS DEL SISTEMA)
+       ========================================================================== -->
+
+  <!-- 1. MODAL GUARDAR / EXPORTAR / COMPARTIR (Bug #3 Resuelto) -->
+  <div id="modal-save" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>💾 Guardar y Exportar Documento</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-save')">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">Nombre del archivo:</label>
+        <input type="text" id="save-filename-input" class="modal-input" value="Documento1" />
+
+        <label class="modal-label">Formato de salida:</label>
+        <select id="save-format-select" class="modal-input">
+          <option value="pdf">📕 Documento PDF Estándar (.pdf)</option>
+          <option value="pdf-light">⚡ PDF Comprimido para WhatsApp (.pdf)</option>
+          <option value="doc">📘 Documento Microsoft Word (.doc)</option>
+          <option value="jpg">🖼️ Imagen Larga Continua (.jpg)</option>
+          <option value="html">🌐 Página Web Completa (.html)</option>
+          <option value="txt">📝 Texto Plano sin formato (.txt)</option>
+        </select>
+
+        <label class="modal-check-row">
+          <input type="checkbox" id="modal-chk-anon" checked />
+          <span>Limpiar metadatos ocultos (Guardar anónimo)</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-secondary" onclick="closeModal('modal-save')">Cancelar</button>
+        <button class="modal-btn-share" onclick="executeSaveOrShare(true)">📤 Compartir Directo</button>
+        <button class="modal-btn-primary" onclick="executeSaveOrShare(false)">⬇ Guardar en Teléfono</button>
+      </div>
     </div>
   </div>
 
-  <!-- 7. MODAL PARA PONER NOMBRE AL ARCHIVO Y EXPORTAR A PDF / DOC -->
-  <div id="saveModal" class="modal-backdrop">
+  <!-- 2. MODAL FECHA Y HORA ELEGIBLE (Bug #5 Resuelto) -->
+  <div id="modal-datetime" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header">
-        <span id="modalTitle">Guardar documento</span>
-        <button class="icon-btn-top" onclick="closeSaveModal()">✕</button>
+        <span>📅 Insertar Fecha y Hora</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-datetime')">✕</button>
       </div>
       <div class="modal-body">
-        <label for="modalFileName">Nombre del archivo:</label>
-        <input type="text" id="modalFileName" class="modal-input" placeholder="Ej. Tarea de Redes" />
-        <label for="modalFormat">Formato de salida:</label>
-        <select id="modalFormat" class="modal-input">
-          <option value="pdf">Documento PDF (.pdf)</option>
-          <option value="doc">Documento de Microsoft Word (.doc)</option>
+        <label class="modal-label">Elige el formato que deseas insertar:</label>
+        <select id="datetime-format-select" class="modal-input" size="5">
+          <!-- Se llena dinámicamente con la fecha/hora actual en JS -->
         </select>
       </div>
       <div class="modal-footer">
-        <button class="btn-doc" onclick="closeSaveModal()">Cancelar</button>
-        <button class="btn-pdf" onclick="confirmSaveFile()">Guardar ahora</button>
+        <button class="modal-btn-secondary" onclick="closeModal('modal-datetime')">Cancelar</button>
+        <button class="modal-btn-primary" onclick="confirmInsertDateTime()">Insertar</button>
       </div>
     </div>
   </div>
 
-<script>
+  <!-- 3. MODAL NUMERACIÓN DE PÁGINAS CON RANGOS -->
+  <div id="modal-pagenumbers" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🔢 Configurar Números de Página</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-pagenumbers')">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-check-row">
+          <input type="checkbox" id="pgnum-enable" checked />
+          <span>Activar numeración en el pie de página</span>
+        </label>
+
+        <div class="modal-grid-2">
+          <div>
+            <label class="modal-label">Desde la página:</label>
+            <input type="number" id="pgnum-start" class="modal-input" value="1" min="1" />
+          </div>
+          <div>
+            <label class="modal-label">Hasta la página (0 = todas):</label>
+            <input type="number" id="pgnum-end" class="modal-input" value="0" min="0" />
+          </div>
+        </div>
+
+        <label class="modal-label">Alineación del número:</label>
+        <select id="pgnum-align" class="modal-input">
+          <option value="left">Izquierda</option>
+          <option value="center" selected>Centro</option>
+          <option value="right">Derecha</option>
+        </select>
+
+        <label class="modal-label">Formato visual:</label>
+        <select id="pgnum-format" class="modal-input">
+          <option value="simple">Solo número (1, 2, 3...)</option>
+          <option value="pageof" selected>Página X de Y</option>
+          <option value="dashes">- 1 -</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-secondary" onclick="closeModal('modal-pagenumbers')">Cancelar</button>
+        <button class="modal-btn-primary" onclick="applyPageNumberConfig()">Aplicar Numeración</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODAL FIRMA NATIVA EN PANTALLA -->
+  <div id="modal-signature" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>✍️ Dibujar Firma Digital</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-signature')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">Dibuja tu firma con el dedo. Se insertará con fondo transparente:</p>
+        <div class="signature-canvas-wrap">
+          <canvas id="signature-canvas" width="320" height="160"></canvas>
+        </div>
+        <div class="tool-row" style="justify-content: space-between;">
+          <label class="modal-label">Color de tinta: <input type="color" id="sign-pen-color" value="#002266" /></label>
+          <button class="tool-btn" onclick="clearSignaturePad()">🗑️ Limpiar Lienzo</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-secondary" onclick="closeModal('modal-signature')">Cancelar</button>
+        <button class="modal-btn-primary" onclick="insertSignatureToDoc()">Insertar Firma</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MODAL INSERTAR TABLA -->
+  <div id="modal-table" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>▦ Insertar Tabla</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-table')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-grid-2">
+          <div>
+            <label class="modal-label">Número de Filas:</label>
+            <input type="number" id="table-rows-input" class="modal-input" value="3" min="1" max="50" />
+          </div>
+          <div>
+            <label class="modal-label">Número de Columnas:</label>
+            <input type="number" id="table-cols-input" class="modal-input" value="3" min="1" max="15" />
+          </div>
+        </div>
+        <label class="modal-check-row">
+          <input type="checkbox" id="table-header-chk" checked />
+          <span>Incluir fila de encabezado con color</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-secondary" onclick="closeModal('modal-table')">Cancelar</button>
+        <button class="modal-btn-primary" onclick="confirmInsertTable()">Insertar Tabla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MODAL BLOQUE DE CÓDIGO (SYNTAX HIGHLIGHT) -->
+  <div id="modal-code" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>💻 Insertar Bloque de Código</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-code')">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">Lenguaje:</label>
+        <select id="code-lang-select" class="modal-input">
+          <option value="javascript">JavaScript / Node.js</option>
+          <option value="html">HTML / CSS</option>
+          <option value="python">Python</option>
+          <option value="sql">SQL / Base de Datos</option>
+          <option value="bash">Bash / Terminal Linux</option>
+        </select>
+        <label class="modal-label">Pega o escribe tu código:</label>
+        <textarea id="code-content-input" class="modal-input" rows="6" placeholder="function holaMundo() { ... }"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-secondary" onclick="closeModal('modal-code')">Cancelar</button>
+        <button class="modal-btn-primary" onclick="confirmInsertCodeBlock()">Insertar Código</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. MODAL MÁQUINA DEL TIEMPO (HISTORIAL DE VERSIONES LOCAL) -->
+  <div id="modal-history" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🕒 Máquina del Tiempo (Historial Local)</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-history')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">Desliza para recuperar versiones guardadas automáticamente en tu teléfono:</p>
+        <input type="range" id="history-slider" min="0" max="0" value="0" oninput="previewHistorySnapshot(this.value)" />
+        <div id="history-info-label" class="modal-hint" style="font-weight:bold; text-align:center;">Versión actual</div>
+        <div id="history-preview-box" class="history-preview-box"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-secondary" onclick="closeModal('modal-history')">Cerrar</button>
+        <button class="modal-btn-primary" onclick="restoreHistorySnapshot()">Restaurar esta Versión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. MODAL BUSCAR Y REEMPLAZAR -->
+  <div id="modal-find" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🔍 Buscar y Reemplazar</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-find')">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">Buscar texto:</label>
+        <input type="text" id="find-input" class="modal-input" placeholder="Palabra a buscar..." />
+        <label class="modal-label">Reemplazar con:</label>
+        <input type="text" id="replace-input" class="modal-input" placeholder="Palabra nueva..." />
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-secondary" onclick="closeModal('modal-find')">Cerrar</button>
+        <button class="modal-btn-primary" onclick="executeFindAndReplace()">Reemplazar Todo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. MODAL VARIABLES MÁGICAS {{CAMPOS}} -->
+  <div id="modal-variables" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🪄 Autocompletar Variables Mágicas</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-variables')">✕</button>
+      </div>
+      <div class="modal-body" id="magic-vars-container">
+        <!-- Se genera dinámicamente según las {{Variables}} detectadas en el texto -->
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-secondary" onclick="closeModal('modal-variables')">Cancelar</button>
+        <button class="modal-btn-primary" onclick="applyMagicVariables()">Rellenar Documento</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICACIÓN TOAST FLOTANTE -->
+  <div id="toast-notification" class="toast-notification">Acción completada</div>
+
+  <script>
+  /* ==========================================================================
+     MICROWORD NART - MOTOR PRINCIPAL JAVASCRIPT (100% OFFLINE & CAPACITOR READY)
+     ========================================================================== */
+
+  // Referencias principales del DOM
   const editor = document.getElementById('editor');
-  const docNameInput = document.getElementById('docNameInput');
-  const wordCountEl = document.getElementById('wordCount');
-  const saveStatusEl = document.getElementById('saveStatus');
-  let autoSaveEnabled = true;
-  let currentZoom = 100;
+  const docStage = document.getElementById('document-stage');
+  const docTitleInput = document.getElementById('doc-title');
+  const floatingToolbar = document.getElementById('floating-toolbar');
+  const slashMenu = document.getElementById('slash-menu');
 
-  // Forzar que cada Enter cree un párrafo <p> limpio para que nunca se pinte toda la hoja
-  document.execCommand('defaultParagraphSeparator', false, 'p');
+  // Estado Global de la Aplicación
+  let savedRange = null;
+  let autosaveEnabled = true;
+  let markdownLiveEnabled = true;
+  let formatPainterStyle = null;
+  let pendingImageMode = 'inline'; // 'inline', 'float', 'watermark'
+  let currentOrientation = 'portrait';
+  let currentPaperSize = 'a4';
+  let ollamaEndpoint = localStorage.getItem('mw_ollama_url') || 'http://127.0.0.1:11434/api/generate';
+  let ollamaModel = localStorage.getItem('mw_ollama_model') || 'llama3.2:1b';
 
+  // Configuración de Tamaños de Hoja (en milímetros)
+  const PAPER_DIMENSIONS = {
+    a4:        { w: 210, h: 297, label: 'A4' },
+    letter:    { w: 216, h: 279, label: 'Carta' },
+    legal:     { w: 216, h: 356, label: 'Oficio' },
+    executive: { w: 184, h: 267, label: 'Ejecutivo' },
+    a5:        { w: 148, h: 210, label: 'A5' }
+  };
+
+  // Configuración de Numeración de Páginas
+  let pageNumberConfig = {
+    enabled: false,
+    start: 1,
+    end: 0,
+    align: 'center',
+    format: 'pageof'
+  };
+
+  // Historial Local (Máquina del Tiempo)
+  let historySnapshots = [];
+
+  /* ================== 1. INICIALIZACIÓN Y ARRANQUE EN 1 SEGUNDO ================== */
   window.addEventListener('DOMContentLoaded', () => {
-    const savedHtml = localStorage.getItem('microword_v2_html');
-    const savedName = localStorage.getItem('microword_v2_name');
-    if (savedHtml && savedHtml.trim() !== '') {
-      editor.innerHTML = savedHtml;
-    } else {
-      editor.innerHTML = '<p><br></p>';
-    }
-    if (savedName) {
-      docNameInput.value = savedName;
-      document.title = savedName;
-    }
-    // Limpiar cualquier background-color accidental heredado en el contenedor
-    editor.style.backgroundColor = '#ffffff';
-    updateStats();
+    // Forzar uso de estilos CSS modernos en document.execCommand
+    try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+
+    loadLocalDocument();
+    loadCustomFontsFromStorage();
+    loadHistoryFromStorage();
+    initSignatureCanvas();
+    updateDocumentStats();
+    updateFooterPageNumbers();
+    setupExternalFileIntentListener();
+
+    // Autoguardado periódico cada 25 segundos
+    setInterval(() => {
+      if (autosaveEnabled) saveLocalDocument(true);
+    }, 25000);
   });
 
-  // Asegurar que siempre exista al menos un <p> dentro del editor
-  function ensureParagraphIntegrity() {
-    if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') {
-      editor.innerHTML = '<p><br></p>';
-    }
-    editor.style.backgroundColor = '#ffffff';
+  function showToast(msg) {
+    const t = document.getElementById('toast-notification');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
   }
 
-  function execCmd(command, value = null) {
-    editor.focus();
-    document.execCommand('styleWithCSS', false, false);
-    document.execCommand(command, false, value);
-    ensureParagraphIntegrity();
-    updateToolbarState();
-    triggerAutoSave();
-  }
-
-  // SOLUCIÓN DEFINITIVA AL RESALTADOR: Solo pinta las palabras seleccionadas, jamás la hoja
-  function applyHighlight(color) {
-    editor.focus();
+  /* ================== 2. GESTIÓN DE SELECCIÓN MÓVIL (SOLUCIÓN BUGS #1 y #2) ================== */
+  function saveSelection() {
     const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-
-    if (sel.isCollapsed) {
-      alert('Selecciona primero con el dedo o el cursor las palabras que deseas resaltar.');
-      return;
-    }
-
-    document.execCommand('styleWithCSS', false, true);
-    document.execCommand('hiliteColor', false, color);
-    document.execCommand('styleWithCSS', false, false);
-
-    // Blindaje extra: el contenedor #editor siempre permanece blanco
-    editor.style.backgroundColor = '#ffffff';
-    triggerAutoSave();
-  }
-
-  function removeHighlight() {
-    editor.focus();
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed) {
-      alert('Selecciona el texto resaltado para quitarle el color de fondo.');
-      return;
-    }
-    document.execCommand('styleWithCSS', false, true);
-    document.execCommand('hiliteColor', false, 'transparent');
-    document.execCommand('styleWithCSS', false, false);
-    editor.style.backgroundColor = '#ffffff';
-    triggerAutoSave();
-  }
-
-  // Cambiar tamaño de fuente exacto en puntos (pt)
-  function changeFontSizePt(ptValue) {
-    editor.focus();
-    const sel = window.getSelection();
-    if (!sel.rangeCount || sel.isCollapsed) return;
-    document.execCommand('fontSize', false, '7');
-    const fonts = editor.querySelectorAll('font[size="7"]');
-    fonts.forEach(f => {
-      f.removeAttribute('size');
-      f.style.fontSize = ptValue;
-    });
-    triggerAutoSave();
-  }
-
-  let basePt = 11;
-  function stepFontSize(delta) {
-    basePt = Math.min(48, Math.max(8, basePt + delta));
-    changeFontSizePt(basePt + 'pt');
-  }
-
-  function setLineHeight(val) {
-    editor.style.lineHeight = val;
-    triggerAutoSave();
-  }
-
-  function applyQuickStyle(tag, sizePt, color, italic, cardEl) {
-    document.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
-    if (cardEl) cardEl.classList.add('active');
-    editor.focus();
-    document.execCommand('formatBlock', false, tag);
-    const sel = window.getSelection();
-    if (sel.anchorNode) {
-      const block = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
-      if (block && block !== editor) {
-        block.style.fontSize = sizePt;
-        block.style.color = color;
-        block.style.fontStyle = italic ? 'italic' : 'normal';
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      if (editor.contains(range.commonAncestorContainer)) {
+        savedRange = range.cloneRange();
       }
     }
-    triggerAutoSave();
   }
 
-  function switchTab(tabId, btn) {
+  function restoreSelection() {
+    editor.focus();
+    if (savedRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+  }
+
+  // Guardar selección constantemente al interactuar con el lienzo
+  editor.addEventListener('keyup', () => {
+    saveSelection();
+    updateActiveToolbarStates();
+    updateDocumentStats();
+  });
+  editor.addEventListener('mouseup', () => {
+    saveSelection();
+    updateActiveToolbarStates();
+    handleFloatingToolbar();
+  });
+  editor.addEventListener('touchend', () => {
+    setTimeout(() => {
+      saveSelection();
+      updateActiveToolbarStates();
+      handleFloatingToolbar();
+    }, 80);
+  });
+
+  document.addEventListener('selectionchange', () => {
+    if (document.activeElement === editor) {
+      saveSelection();
+      handleFloatingToolbar();
+    }
+  });
+
+  /* ================== 3. NAVEGACIÓN DE PESTAÑAS Y MODALES ================== */
+  function switchTab(panelId, btnElem) {
     document.querySelectorAll('.ribbon-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tabId).classList.add('active');
-    btn.classList.add('active');
+    const target = document.getElementById(panelId);
+    if (target) target.classList.add('active');
+    if (btnElem) btnElem.classList.add('active');
   }
 
-  function updateToolbarState() {
-    const map = [
-      { id: 'btn-bold', cmd: 'bold' },
-      { id: 'btn-italic', cmd: 'italic' },
-      { id: 'btn-underline', cmd: 'underline' },
-      { id: 'btn-strike', cmd: 'strikeThrough' },
-      { id: 'btn-sub', cmd: 'subscript' },
-      { id: 'btn-sup', cmd: 'superscript' },
-      { id: 'btn-ul', cmd: 'insertUnorderedList' },
-      { id: 'btn-ol', cmd: 'insertOrderedList' },
-      { id: 'btn-left', cmd: 'justifyLeft' },
-      { id: 'btn-center', cmd: 'justifyCenter' },
-      { id: 'btn-right', cmd: 'justifyRight' },
-      { id: 'btn-full', cmd: 'justifyFull' }
-    ];
-    map.forEach(item => {
-      const btn = document.getElementById(item.id);
-      if (btn) {
-        if (document.queryCommandState(item.cmd)) btn.classList.add('active');
-        else btn.classList.remove('active');
-      }
-    });
+  function openModal(id) {
+    saveSelection();
+    if (id === 'modal-datetime') populateDateTimeModal();
+    if (id === 'modal-history') refreshHistoryModalUI();
+    const m = document.getElementById(id);
+    if (m) m.classList.add('open');
   }
 
-  function updateStats() {
-    const text = editor.innerText.replace(/\u200B/g, '').trim();
-    const words = text === '' ? 0 : text.split(/\s+/).length;
-    wordCountEl.textContent = words + (words === 1 ? ' palabra' : ' palabras');
+  function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('open');
   }
 
-  function toggleAutoSave() {
-    autoSaveEnabled = !autoSaveEnabled;
-    const sw = document.getElementById('autosaveSwitch');
-    sw.classList.toggle('on', autoSaveEnabled);
-    saveStatusEl.textContent = autoSaveEnabled ? '✓ Guardado' : 'Autoguardado desactivado';
+  /* ================== 4. FORMATO DE TEXTO Y FUENTES (BUGS #1 y #2 RESUELTOS) ================== */
+  function execCmd(command, value = null) {
+    restoreSelection();
+    document.execCommand(command, false, value);
+    saveSelection();
+    updateActiveToolbarStates();
+    updateDocumentStats();
   }
 
-  function triggerAutoSave() {
-    const cleanName = docNameInput.value.trim() || 'Documento 1';
-    document.title = cleanName;
-    if (!autoSaveEnabled) return;
-    saveStatusEl.textContent = 'Guardando...';
-    localStorage.setItem('microword_v2_html', editor.innerHTML);
-    localStorage.setItem('microword_v2_name', cleanName);
-    setTimeout(() => { saveStatusEl.textContent = '✓ Guardado'; }, 350);
-  }
+  // Aplicar Familia Tipográfica de forma estricta
+  function applyFontFamily(fontName) {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
 
-  editor.addEventListener('input', () => {
-    ensureParagraphIntegrity();
-    updateStats();
-    triggerAutoSave();
-  });
-  document.addEventListener('selectionchange', updateToolbarState);
-  docNameInput.addEventListener('input', triggerAutoSave);
-
-  // ================= MODAL DE GUARDAR CON NOMBRE (PDF Y DOC) =================
-  function openSaveModal(defaultFormat) {
-    const currentName = docNameInput.value.trim() || 'Documento 1';
-    document.getElementById('modalFileName').value = currentName;
-    document.getElementById('modalFormat').value = defaultFormat;
-    document.getElementById('saveModal').classList.add('open');
-    setTimeout(() => document.getElementById('modalFileName').select(), 80);
-  }
-
-  function closeSaveModal() {
-    document.getElementById('saveModal').classList.remove('open');
-  }
-
-  function confirmSaveFile() {
-    const rawName = document.getElementById('modalFileName').value.trim() || 'Documento 1';
-    const format = document.getElementById('modalFormat').value;
-
-    // Actualizar nombre en la barra superior y en el título del documento
-    docNameInput.value = rawName;
-    document.title = rawName;
-    triggerAutoSave();
-    closeSaveModal();
-
-    if (format === 'pdf') {
-      // Al llamar a window.print() con document.title actualizado, Android y PC guardan el PDF con ese nombre exacto
-      setTimeout(() => {
-        window.print();
-      }, 200);
+    if (sel.isCollapsed) {
+      // Si no hay texto seleccionado, prepara un span con la fuente para lo que escriba a continuación
+      const span = document.createElement('span');
+      span.style.fontFamily = fontName;
+      span.innerHTML = '&#8203;'; // Zero-width space
+      const range = sel.getRangeAt(0);
+      range.insertNode(span);
+      range.setStart(span.firstChild, 1);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
     } else {
-      exportAsDoc(rawName);
+      document.execCommand('fontName', false, fontName);
+      // Forzar limpieza en etiquetas <font face="..."> si el navegador las creó
+      editor.querySelectorAll('font[face]').forEach(f => {
+        const s = document.createElement('span');
+        s.style.fontFamily = f.getAttribute('face');
+        s.innerHTML = f.innerHTML;
+        f.replaceWith(s);
+      });
+    }
+    saveSelection();
+    showToast('Fuente: ' + fontName.replace(/['"]/g, '').split(',')[0]);
+  }
+
+  // Aplicar Tamaño Exacto en Puntos (pt) - Solución Bug #2
+  function applyFontSizePt(ptValue) {
+    const pt = parseFloat(ptValue) || 11;
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) {
+      const span = document.createElement('span');
+      span.style.fontSize = pt + 'pt';
+      span.innerHTML = '&#8203;';
+      range.insertNode(span);
+      range.setStart(span.firstChild, 1);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      // Truco infalible multiplataforma: aplicar fontSize 7 y reemplazar por span con pt exactos
+      document.execCommand('fontSize', false, '7');
+      editor.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="-webkit-xxx-large"]').forEach(el => {
+        el.removeAttribute('size');
+        el.style.fontSize = pt + 'pt';
+      });
+    }
+    document.getElementById('font-size-select').value = String(pt);
+    saveSelection();
+  }
+
+  function stepFontSize(delta) {
+    const selEl = document.getElementById('font-size-select');
+    let current = parseInt(selEl.value, 10) || 11;
+    let next = Math.min(72, Math.max(8, current + delta));
+    // Ajustar o añadir opción si no existe en el select
+    if (![...selEl.options].some(o => Number(o.value) === next)) {
+      const opt = new Option(String(next), String(next));
+      selEl.add(opt);
+    }
+    selEl.value = String(next);
+    applyFontSizePt(next);
+  }
+
+  function applyTextColor(color) {
+    restoreSelection();
+    document.execCommand('foreColor', false, color);
+    saveSelection();
+  }
+
+  // Resaltador Inteligente (Sólo pinta el texto seleccionado, nunca toda la hoja)
+  function applyHighlightColor(color) {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+      showToast('Selecciona primero las palabras que deseas resaltar');
+      return;
+    }
+    try {
+      const range = sel.getRangeAt(0);
+      const fragment = range.extractContents();
+      const mark = document.createElement('span');
+      mark.style.backgroundColor = color;
+      if (color === 'transparent') {
+        mark.querySelectorAll('*').forEach(n => { n.style.backgroundColor = 'transparent'; });
+      }
+      mark.appendChild(fragment);
+      range.insertNode(mark);
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(mark);
+      sel.addRange(newRange);
+      savedRange = newRange.cloneRange();
+    } catch (err) {
+      document.execCommand('hiliteColor', false, color);
     }
   }
 
-  function exportAsDoc(fileName) {
-    const fullFileName = fileName.endsWith('.doc') ? fileName : fileName + '.doc';
-    const wordHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + fileName + "</title></head><body style='font-family:Calibri,sans-serif;font-size:11pt;'>" + editor.innerHTML + "</body></html>";
+  function clearSelectionFormatting() {
+    restoreSelection();
+    document.execCommand('removeFormat', false, null);
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && !sel.isCollapsed) {
+      const container = sel.getRangeAt(0).commonAncestorContainer;
+      const el = container.nodeType === 1 ? container : container.parentElement;
+      if (el && el !== editor) {
+        el.style.backgroundColor = '';
+        el.style.fontSize = '';
+        el.style.fontFamily = '';
+        el.style.color = '';
+      }
+    }
+    saveSelection();
+  }
 
-    const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword' });
+  function changeTextCase(mode) {
+    if (!mode) return;
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) return;
+    let txt = sel.toString();
+    if (mode === 'upper') txt = txt.toUpperCase();
+    else if (mode === 'lower') txt = txt.toLowerCase();
+    else if (mode === 'capitalize') {
+      txt = txt.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    }
+    document.execCommand('insertText', false, txt);
+    saveSelection();
+  }
+
+  function applyLineHeight(val) {
+    if (!val) return;
+    restoreSelection();
+    const block = getCurrentBlockElement();
+    if (block && block !== editor) {
+      block.style.lineHeight = val;
+    } else {
+      editor.style.lineHeight = val;
+    }
+  }
+
+  function applyParagraphBg(color) {
+    restoreSelection();
+    const block = getCurrentBlockElement();
+    if (block && block !== editor) {
+      block.style.backgroundColor = color;
+      block.style.padding = '4px 8px';
+      block.style.borderRadius = '3px';
+    }
+  }
+
+  function getCurrentBlockElement() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return null;
+    let node = sel.getRangeAt(0).startContainer;
+    while (node && node !== editor) {
+      if (node.nodeType === 1 && ['P', 'DIV', 'H1', 'H2', 'H3', 'BLOCKQUOTE', 'LI'].includes(node.tagName)) {
+        return node;
+      }
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  function applyQuickStyle(styleType) {
+    restoreSelection();
+    if (styleType === 'normal') {
+      document.execCommand('formatBlock', false, 'P');
+    } else if (styleType === 'h1') {
+      document.execCommand('formatBlock', false, 'H1');
+    } else if (styleType === 'h2') {
+      document.execCommand('formatBlock', false, 'H2');
+    } else if (styleType === 'quote') {
+      document.execCommand('formatBlock', false, 'BLOCKQUOTE');
+    }
+    saveSelection();
+  }
+
+  function updateActiveToolbarStates() {
+    const toggleState = (id, cmd) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      try {
+        btn.classList.toggle('active', document.queryCommandState(cmd));
+      } catch (e) {}
+    };
+    toggleState('btn-bold', 'bold');
+    toggleState('btn-italic', 'italic');
+    toggleState('btn-underline', 'underline');
+    toggleState('btn-strike', 'strikeThrough');
+    toggleState('btn-sub', 'subscript');
+    toggleState('btn-sup', 'superscript');
+    toggleState('btn-align-left', 'justifyLeft');
+    toggleState('btn-align-center', 'justifyCenter');
+    toggleState('btn-align-right', 'justifyRight');
+    toggleState('btn-align-justify', 'justifyFull');
+  }
+
+  /* ================== 5. PORTAPAPELES NATIVO Y COPIAR FORMATO (BUG #4 RESUELTO) ================== */
+  async function nativeCopy() {
+    restoreSelection();
+    const sel = window.getSelection();
+    const selectedText = sel ? sel.toString() : '';
+    if (!selectedText) {
+      showToast('Selecciona texto para copiar');
+      return;
+    }
+    try {
+      if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Clipboard) {
+        await Capacitor.Plugins.Clipboard.write({ string: selectedText });
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(selectedText);
+      } else {
+        document.execCommand('copy');
+      }
+      window._internalClipboard = selectedText;
+      showToast('📋 Copiado al portapapeles');
+    } catch (e) {
+      document.execCommand('copy');
+      window._internalClipboard = selectedText;
+      showToast('📋 Copiado');
+    }
+  }
+
+  async function nativeCut() {
+    await nativeCopy();
+    restoreSelection();
+    document.execCommand('delete');
+    saveSelection();
+  }
+
+  async function nativePaste() {
+    restoreSelection();
+    let textToPaste = '';
+    try {
+      if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Clipboard) {
+        const res = await Capacitor.Plugins.Clipboard.read();
+        textToPaste = res.value || '';
+      } else if (navigator.clipboard && navigator.clipboard.readText) {
+        textToPaste = await navigator.clipboard.readText();
+      }
+    } catch (e) {
+      textToPaste = window._internalClipboard || '';
+    }
+
+    if (textToPaste) {
+      document.execCommand('insertText', false, textToPaste);
+      showToast('📋 Texto pegado');
+    } else {
+      const manual = prompt('Pega tu texto aquí para insertarlo en la hoja:');
+      if (manual) document.execCommand('insertText', false, manual);
+    }
+    saveSelection();
+    updateDocumentStats();
+  }
+
+  function toggleFormatPainter() {
+    const btn = document.getElementById('btn-format-painter');
+    if (formatPainterStyle) {
+      formatPainterStyle = null;
+      btn.classList.remove('active');
+      showToast('Copiar formato desactivado');
+      return;
+    }
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const el = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+    const comp = window.getComputedStyle(el);
+    formatPainterStyle = {
+      fontFamily: comp.fontFamily,
+      fontSize: comp.fontSize,
+      fontWeight: comp.fontWeight,
+      fontStyle: comp.fontStyle,
+      color: comp.color,
+      backgroundColor: comp.backgroundColor,
+      textDecoration: comp.textDecorationLine
+    };
+    btn.classList.add('active');
+    showToast('🖌️ Selecciona otro texto para aplicarle este formato');
+  }
+
+  editor.addEventListener('mouseup', applyFormatPainterIfNeeded);
+  editor.addEventListener('touchend', () => setTimeout(applyFormatPainterIfNeeded, 120));
+
+  function applyFormatPainterIfNeeded() {
+    if (!formatPainterStyle) return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    Object.assign(span.style, formatPainterStyle);
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+    formatPainterStyle = null;
+    document.getElementById('btn-format-painter').classList.remove('active');
+    showToast('🖌️ Formato aplicado');
+  }
+
+  /* ================== 6. INSTALADOR DE FUENTES CUSTOM (.TTF / .OTF) ================== */
+  function triggerInstallFont() {
+    document.getElementById('hidden-font-input').click();
+  }
+
+  function handleFontInstall(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const fontName = file.name.replace(/\.(ttf|otf|woff2?)$/i, '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64Data = e.target.result;
+      registerCustomFont(fontName, base64Data, true);
+      applyFontFamily(fontName);
+      showToast('✨ Fuente instalada: ' + fontName);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }
+
+  function registerCustomFont(fontName, dataUrl, saveToLocal = false) {
+    // Inyectar @font-face
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `@font-face { font-family: '${fontName}'; src: url('${dataUrl}'); }`;
+    document.head.appendChild(styleEl);
+
+    // Agregar al <select> si no existe
+    const optGroup = document.getElementById('custom-fonts-optgroup');
+    if (optGroup && ![...optGroup.children].some(o => o.value === fontName)) {
+      const opt = document.createElement('option');
+      opt.value = fontName;
+      opt.textContent = '★ ' + fontName;
+      opt.style.fontFamily = fontName;
+      optGroup.appendChild(opt);
+    }
+
+    if (saveToLocal) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('mw_custom_fonts') || '{}');
+        stored[fontName] = dataUrl;
+        localStorage.setItem('mw_custom_fonts', JSON.stringify(stored));
+      } catch (err) {
+        showToast('Fuente cargada para esta sesión (archivo grande)');
+      }
+    }
+  }
+
+  function loadCustomFontsFromStorage() {
+    try {
+      const stored = JSON.parse(localStorage.getItem('mw_custom_fonts') || '{}');
+      Object.keys(stored).forEach(name => registerCustomFont(name, stored[name], false));
+    } catch (e) {}
+  }
+
+  /* ================== 7. ELEMENTOS DE INSERCIÓN (TABLAS, IMÁGENES, FIRMAS, CÓDIGO, FECHA) ================== */
+  function insertBlankPage() {
+    restoreSelection();
+    const html = `<div class="visual-page-break" contenteditable="false"></div><p><br></p>`;
+    document.execCommand('insertHTML', false, html);
+    updateDocumentStats();
+  }
+
+  function insertPageBreak() {
+    insertBlankPage();
+  }
+
+  // Tablas
+  function confirmInsertTable() {
+    const rows = parseInt(document.getElementById('table-rows-input').value, 10) || 3;
+    const cols = parseInt(document.getElementById('table-cols-input').value, 10) || 3;
+    const hasHeader = document.getElementById('table-header-chk').checked;
+
+    let html = '<table><tbody>';
+    for (let r = 0; r < rows; r++) {
+      html += '<tr>';
+      for (let c = 0; c < cols; c++) {
+        if (r === 0 && hasHeader) {
+          html += `<th>Encabezado ${c + 1}</th>`;
+        } else {
+          html += `<td><br></td>`;
+        }
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table><p><br></p>';
+
+    closeModal('modal-table');
+    restoreSelection();
+    document.execCommand('insertHTML', false, html);
+  }
+
+  function modifyActiveTable(action) {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    let node = sel.anchorNode;
+    let td = null, tr = null, table = null;
+    while (node && node !== editor) {
+      if (node.tagName === 'TD' || node.tagName === 'TH') td = node;
+      if (node.tagName === 'TR') tr = node;
+      if (node.tagName === 'TABLE') { table = node; break; }
+      node = node.parentNode;
+    }
+    if (!table) {
+      showToast('Toca primero dentro de una celda de la tabla');
+      return;
+    }
+    if (action === 'addRow' && tr) {
+      const newRow = tr.cloneNode(true);
+      newRow.querySelectorAll('td, th').forEach(c => c.innerHTML = '<br>');
+      tr.parentNode.insertBefore(newRow, tr.nextSibling);
+    } else if (action === 'delRow' && tr) {
+      if (table.rows.length > 1) tr.remove();
+      else table.remove();
+    } else if (action === 'addCol') {
+      [...table.rows].forEach((row, idx) => {
+        const cell = document.createElement(idx === 0 && row.querySelector('th') ? 'th' : 'td');
+        cell.innerHTML = '<br>';
+        row.appendChild(cell);
+      });
+    } else if (action === 'delCol' && td) {
+      const colIdx = td.cellIndex;
+      [...table.rows].forEach(row => {
+        if (row.cells[colIdx]) row.deleteCell(colIdx);
+      });
+    }
+  }
+
+  // Imágenes Inmunes (En línea, Flotantes y Marca de Agua)
+  function triggerInsertImage(mode) {
+    pendingImageMode = mode || 'inline';
+    document.getElementById('hidden-image-input').click();
+  }
+
+  function handleImageInsert(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const src = e.target.result;
+      if (pendingImageMode === 'watermark') {
+        const wmLayer = document.getElementById('doc-watermark-layer');
+        wmLayer.innerHTML = `<img src="${src}" class="watermark-img-item" />`;
+        showToast('💧 Imagen puesta como Marca de Agua');
+      } else if (pendingImageMode === 'float') {
+        restoreSelection();
+        const html = `<span class="doc-img-float-wrap" contenteditable="false" style="width:160px;"><img src="${src}" /></span>`;
+        document.execCommand('insertHTML', false, html);
+        showToast('🚀 Imagen flotante insertada');
+      } else {
+        restoreSelection();
+        const html = `<img src="${src}" class="doc-img-inline" />`;
+        document.execCommand('insertHTML', false, html);
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }
+
+  function insertShape(type) {
+    if (!type) return;
+    restoreSelection();
+    let html = '';
+    if (type === 'hr') {
+      html = '<hr style="border:none; border-top:2px solid #185ABD; margin:10px 0;" /><p><br></p>';
+    } else if (type === 'box') {
+      html = '<div style="border:2px solid #185ABD; background:#F3F9FF; padding:10px; border-radius:4px; margin:8px 0;">Escribe dentro del cuadro...</div><p><br></p>';
+    } else if (type === 'circle') {
+      html = '<div style="width:90px; height:90px; border:3px solid #185ABD; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; text-align:center; font-weight:bold; font-size:10pt; margin:6px;">SELLO</div>';
+    } else if (type === 'arrow') {
+      html = '<span style="font-size:20pt; color:#185ABD; font-weight:bold;"> &#10140; </span>';
+    }
+    document.execCommand('insertHTML', false, html);
+  }
+
+  // Firma Digital en Pantalla
+  let sigCanvas, sigCtx, isDrawingSig = false;
+  function initSignatureCanvas() {
+    sigCanvas = document.getElementById('signature-canvas');
+    if (!sigCanvas) return;
+    sigCtx = sigCanvas.getContext('2d');
+    sigCtx.lineWidth = 2.4;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
+
+    const getPos = (e) => {
+      const rect = sigCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    };
+
+    const start = (e) => {
+      e.preventDefault();
+      isDrawingSig = true;
+      sigCtx.strokeStyle = document.getElementById('sign-pen-color').value || '#002266';
+      const p = getPos(e);
+      sigCtx.beginPath();
+      sigCtx.moveTo(p.x, p.y);
+    };
+    const move = (e) => {
+      if (!isDrawingSig) return;
+      e.preventDefault();
+      const p = getPos(e);
+      sigCtx.lineTo(p.x, p.y);
+      sigCtx.stroke();
+    };
+    const end = () => { isDrawingSig = false; };
+
+    sigCanvas.addEventListener('mousedown', start);
+    sigCanvas.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    sigCanvas.addEventListener('touchstart', start, { passive: false });
+    sigCanvas.addEventListener('touchmove', move, { passive: false });
+    sigCanvas.addEventListener('touchend', end);
+  }
+
+  function clearSignaturePad() {
+    if (sigCtx && sigCanvas) sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  }
+
+  function insertSignatureToDoc() {
+    if (!sigCanvas) return;
+    const dataUrl = sigCanvas.toDataURL('image/png');
+    closeModal('modal-signature');
+    restoreSelection();
+    const html = `<div style="display:inline-block; text-align:center; margin:8px 0;" contenteditable="false">
+      <img src="${dataUrl}" style="max-width:170px; height:auto; display:block; border-bottom:1px solid #333;" />
+      <span style="font-size:9pt; color:#555;">Firma Autorizada</span>
+    </div><p><br></p>`;
+    document.execCommand('insertHTML', false, html);
+    clearSignaturePad();
+    showToast('✍️ Firma insertada');
+  }
+
+  // Bloques de Código con Coloreado de Sintaxis Básico
+  function confirmInsertCodeBlock() {
+    const lang = document.getElementById('code-lang-select').value;
+    const rawCode = document.getElementById('code-content-input').value;
+    if (!rawCode.trim()) return;
+
+    const escaped = rawCode
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Coloreado ligero de palabras clave
+    const highlighted = escaped
+      .replace(/\b(function|const|let|var|return|if|else|for|while|import|from|def|class|SELECT|FROM|WHERE|INSERT|UPDATE)\b/g, '<span style="color:#569CD6;font-weight:bold;">$1</span>')
+      .replace(/(['"`].*?['"`])/g, '<span style="color:#CE9178;">$1</span>')
+      .replace(/(\/\/.*|#.*)/g, '<span style="color:#6A9955;">$1</span>');
+
+    const html = `<pre class="code-block" data-lang="${lang}"><code>${highlighted}</code></pre><p><br></p>`;
+    closeModal('modal-code');
+    document.getElementById('code-content-input').value = '';
+    restoreSelection();
+    document.execCommand('insertHTML', false, html);
+  }
+
+  function insertHyperlink() {
+    restoreSelection();
+    const url = prompt('Introduce la dirección web (URL):', 'https://');
+    if (url && url !== 'https://') {
+      document.execCommand('createLink', false, url);
+    }
+  }
+
+  // Fecha y Hora con Selector de Formato (Bug #5 Resuelto)
+  function populateDateTimeModal() {
+    const select = document.getElementById('datetime-format-select');
+    select.innerHTML = '';
+    const now = new Date();
+    const opts = [
+      now.toLocaleDateString('es-NI', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      now.toLocaleDateString('es-NI', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+      now.toLocaleDateString('es-NI', { day: 'numeric', month: 'short', year: 'numeric' }),
+      now.toLocaleDateString('es-NI') + ' ' + now.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' }),
+      now.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    ];
+    opts.forEach((txt, idx) => {
+      const o = new Option(txt, txt);
+      if (idx === 0) o.selected = true;
+      select.add(o);
+    });
+  }
+
+  function confirmInsertDateTime() {
+    const val = document.getElementById('datetime-format-select').value;
+    closeModal('modal-datetime');
+    if (val) {
+      restoreSelection();
+      document.execCommand('insertText', false, val + ' ');
+    }
+  }
+
+  function insertSymbol(sym) {
+    if (!sym) return;
+    restoreSelection();
+    document.execCommand('insertText', false, sym);
+  }
+
+  /* ================== 8. ENCABEZADO, PIE Y NUMERACIÓN POR RANGOS ================== */
+  function toggleHeaderFooterEdit(zone) {
+    const headerEl = document.getElementById('doc-header-band');
+    const footerEl = document.getElementById('footer-custom-text');
+    const target = zone === 'header' ? headerEl : footerEl;
+    const isEditing = target.getAttribute('contenteditable') === 'true';
+
+    headerEl.setAttribute('contenteditable', 'false');
+    footerEl.setAttribute('contenteditable', 'false');
+
+    if (!isEditing) {
+      target.setAttribute('contenteditable', 'true');
+      target.focus();
+      showToast(zone === 'header' ? 'Editando encabezado (toca la hoja al terminar)' : 'Editando pie de página');
+    }
+  }
+
+  editor.addEventListener('focus', () => {
+    document.getElementById('doc-header-band').setAttribute('contenteditable', 'false');
+    document.getElementById('footer-custom-text').setAttribute('contenteditable', 'false');
+  });
+
+  function applyPageNumberConfig() {
+    pageNumberConfig = {
+      enabled: document.getElementById('pgnum-enable').checked,
+      start: parseInt(document.getElementById('pgnum-start').value, 10) || 1,
+      end: parseInt(document.getElementById('pgnum-end').value, 10) || 0,
+      align: document.getElementById('pgnum-align').value,
+      format: document.getElementById('pgnum-format').value
+    };
+    closeModal('modal-pagenumbers');
+    updateFooterPageNumbers();
+    showToast('🔢 Numeración de página actualizada');
+  }
+
+  function updateFooterPageNumbers() {
+    const footerNumEl = document.getElementById('footer-page-number');
+    if (!footerNumEl) return;
+    if (!pageNumberConfig.enabled) {
+      footerNumEl.textContent = '';
+      return;
+    }
+    const totalPages = getEstimatedPageCount();
+    const startP = pageNumberConfig.start;
+    const endP = pageNumberConfig.end > 0 ? Math.min(totalPages, pageNumberConfig.end) : totalPages;
+
+    footerNumEl.style.textAlign = pageNumberConfig.align;
+    let rangeInfo = (startP > 1 || pageNumberConfig.end > 0) ? ` (Págs. activas: ${startP} a ${endP})` : '';
+
+    if (pageNumberConfig.format === 'simple') {
+      footerNumEl.textContent = `${startP}${rangeInfo}`;
+    } else if (pageNumberConfig.format === 'dashes') {
+      footerNumEl.textContent = `- ${startP} -${rangeInfo}`;
+    } else {
+      footerNumEl.textContent = `Página ${startP} de ${endP}${rangeInfo}`;
+    }
+  }
+
+  /* ================== 9. DISPOSICIÓN DE HOJA (TAMAÑOS, MÁRGENES, VERTICAL/HORIZONTAL - BUG #6 RESUELTO) ================== */
+  function setPageMargins(mmVal) {
+    document.documentElement.style.setProperty('--page-padding', mmVal);
+    showToast('📏 Margen: ' + mmVal);
+  }
+
+  function setPageOrientation(orient) {
+    currentOrientation = orient;
+    document.getElementById('btn-orient-portrait').classList.toggle('active', orient === 'portrait');
+    document.getElementById('btn-orient-landscape').classList.toggle('active', orient === 'landscape');
+    applyPaperDimensions();
+    showToast(orient === 'landscape' ? '🖼️ Hoja en Horizontal' : '📄 Hoja en Vertical');
+  }
+
+  function setPaperSize(sizeKey) {
+    currentPaperSize = sizeKey;
+    applyPaperDimensions();
+  }
+
+  function applyPaperDimensions() {
+    const spec = PAPER_DIMENSIONS[currentPaperSize] || PAPER_DIMENSIONS.a4;
+    const widthMm = currentOrientation === 'landscape' ? spec.h : spec.w;
+    const heightMm = currentOrientation === 'landscape' ? spec.w : spec.h;
+
+    document.documentElement.style.setProperty('--page-width', widthMm + 'mm');
+    document.documentElement.style.setProperty('--page-height', heightMm + 'mm');
+
+    // Actualizar regla @page dinámica para exportación PDF
+    let printStyle = document.getElementById('dynamic-page-print-style');
+    if (!printStyle) {
+      printStyle = document.createElement('style');
+      printStyle.id = 'dynamic-page-print-style';
+      document.head.appendChild(printStyle);
+    }
+    printStyle.textContent = `@media print { @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; } }`;
+
+    const orientLabel = currentOrientation === 'landscape' ? 'Horizontal' : 'Vertical';
+    document.getElementById('status-PaperInfo').textContent = `${spec.label} ${orientLabel}`;
+    updateDocumentStats();
+  }
+
+  function setPageColumns(cols) {
+    document.documentElement.style.setProperty('--page-cols', String(cols));
+    showToast(cols + (cols === 1 ? ' Columna' : ' Columnas'));
+  }
+
+  function setPaperCustomColor(color) {
+    document.documentElement.style.setProperty('--page-bg', color);
+  }
+
+  function togglePageBorder() {
+    docStage.classList.toggle('with-page-border');
+  }
+
+  function promptTextWatermark() {
+    const txt = prompt('Escribe el texto de la Marca de Agua (deja vacío para quitar):', 'CONFIDENCIAL');
+    const wmLayer = document.getElementById('doc-watermark-layer');
+    if (txt === null) return;
+    if (!txt.trim()) {
+      wmLayer.innerHTML = '';
+      showToast('Marca de agua eliminada');
+    } else {
+      wmLayer.innerHTML = `<div class="watermark-text-item">${txt}</div>`;
+      showToast('🔤 Marca de agua aplicada');
+    }
+  }
+
+  /* ================== 10. VISTAS MÓVILES, CORRECTOR (BUG #7) Y MARKDOWN VIVO ================== */
+  function toggleThumbMode() {
+    const active = document.body.classList.toggle('thumb-mode');
+    document.getElementById('btn-thumb-mode')?.classList.toggle('active', active);
+    showToast(active ? '👇 Modo Pulgar Activado (Barras abajo)' : '👆 Barras en posición superior');
+  }
+
+  function toggleDarkMode() {
+    const active = document.body.classList.toggle('dark-mode');
+    document.getElementById('btn-dark-mode')?.classList.toggle('active', active);
+    showToast(active ? '🌙 Modo Oscuro Puro Activado' : '☀️ Modo Claro Activado');
+  }
+
+  function toggleZenMode() {
+    const active = document.body.classList.toggle('zen-mode');
+    if (active) showToast('🧘 Modo Enfoque Zen');
+  }
+
+  function toggleReflowMode() {
+    const active = document.body.classList.toggle('reflow-mode');
+    document.getElementById('btn-reflow-mode')?.classList.toggle('active', active);
+    showToast(active ? '📱 Modo Lectura Móvil Activado' : '📄 Vista de Página Real');
+  }
+
+  // Solución Bug #7: Indicador visual claro de Corrector Ortográfico
+  function toggleSpellcheck() {
+    const current = editor.getAttribute('spellcheck') === 'true';
+    const next = !current;
+    editor.setAttribute('spellcheck', String(next));
+    const btn = document.getElementById('btn-spellcheck');
+    const txt = document.getElementById('spellcheck-state-txt');
+    btn.classList.toggle('active', next);
+    txt.textContent = next ? 'ACTIVO' : 'INACTIVO';
+    // Forzar refresco en Android WebView
+    const tmp = editor.innerHTML;
+    editor.innerHTML = tmp;
+    showToast(next ? '✔️ Corrector Ortográfico ACTIVADO' : '✕ Corrector Ortográfico DESACTIVADO');
+  }
+
+  function toggleMarkdownLive() {
+    markdownLiveEnabled = !markdownLiveEnabled;
+    const btn = document.getElementById('btn-markdown-toggle');
+    btn.classList.toggle('active', markdownLiveEnabled);
+    btn.textContent = markdownLiveEnabled ? '⚡ Markdown Vivo: ON' : '⚡ Markdown Vivo: OFF';
+  }
+
+  // Menú Contextual Flotante y Slash (/)
+  function handleFloatingToolbar() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+      floatingToolbar.style.display = 'none';
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) {
+      floatingToolbar.style.display = 'none';
+      return;
+    }
+    const rect = range.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return;
+
+    floatingToolbar.style.display = 'flex';
+    const topPos = Math.max(10, rect.top - 46);
+    const leftPos = Math.min(window.innerWidth - 260, Math.max(8, rect.left));
+    floatingToolbar.style.top = topPos + 'px';
+    floatingToolbar.style.left = leftPos + 'px';
+  }
+
+  editor.addEventListener('keyup', (e) => {
+    // Comando Slash (/)
+    if (e.key === '/') {
+      const sel = window.getSelection();
+      if (sel.rangeCount) {
+        const rect = sel.getRangeAt(0).getBoundingClientRect();
+        slashMenu.style.display = 'flex';
+        slashMenu.style.top = Math.min(window.innerHeight - 280, rect.bottom + 6) + 'px';
+        slashMenu.style.left = Math.min(window.innerWidth - 220, Math.max(10, rect.left)) + 'px';
+      }
+    } else if (e.key === 'Escape' || e.key === ' ') {
+      slashMenu.style.display = 'none';
+    }
+
+    // Atajos Markdown en vivo al presionar Espacio
+    if (markdownLiveEnabled && e.key === ' ') {
+      const block = getCurrentBlockElement();
+      if (!block) return;
+      const text = block.textContent;
+      if (text.startsWith('# ')) {
+        block.textContent = text.slice(2);
+        document.execCommand('formatBlock', false, 'H1');
+      } else if (text.startsWith('## ')) {
+        block.textContent = text.slice(3);
+        document.execCommand('formatBlock', false, 'H2');
+      } else if (text.startsWith('> ')) {
+        block.textContent = text.slice(2);
+        document.execCommand('formatBlock', false, 'BLOCKQUOTE');
+      }
+    }
+  });
+
+  function executeSlashCommand(cmd) {
+    slashMenu.style.display = 'none';
+    restoreSelection();
+    // Borrar la barra '/' recién escrita
+    document.execCommand('delete', false, null);
+    if (cmd === 'h1') applyQuickStyle('h1');
+    else if (cmd === 'h2') applyQuickStyle('h2');
+    else if (cmd === 'ul') execCmd('insertUnorderedList');
+    else if (cmd === 'ol') execCmd('insertOrderedList');
+    else if (cmd === 'table') openModal('modal-table');
+    else if (cmd === 'code') openModal('modal-code');
+    else if (cmd === 'sign') openModal('modal-signature');
+    else if (cmd === 'date') openModal('modal-datetime');
+    else if (cmd === 'pagebreak') insertPageBreak();
+  }
+
+  /* ================== 11. GUARDADO, EXPORTACIÓN NATIVA Y COMPARTIR (BUG #3 RESUELTO) ================== */
+  function openSaveModal(defaultFormat = 'pdf') {
+    document.getElementById('save-filename-input').value = docTitleInput.value || 'Documento1';
+    document.getElementById('save-format-select').value = defaultFormat;
+    openModal('modal-save');
+  }
+
+  async function executeSaveOrShare(shouldShare) {
+    const fileNameBase = (document.getElementById('save-filename-input').value || 'Documento1').trim();
+    const format = document.getElementById('save-format-select').value;
+    const isAnon = document.getElementById('modal-chk-anon').checked;
+    docTitleInput.value = fileNameBase;
+    closeModal('modal-save');
+
+    if (format === 'pdf') {
+      await exportNativePDF(false, shouldShare);
+    } else if (format === 'pdf-light') {
+      await exportNativePDF(true, shouldShare);
+    } else if (format === 'doc') {
+      await exportWordDoc(shouldShare, isAnon);
+    } else if (format === 'jpg') {
+      await exportLongImage(shouldShare);
+    } else if (format === 'html') {
+      const content = buildStandaloneHTML(isAnon);
+      await saveOrShareFileNative(`${fileNameBase}.html`, content, 'text/html', false, shouldShare);
+    } else if (format === 'txt') {
+      const txt = editor.innerText;
+      await saveOrShareFileNative(`${fileNameBase}.txt`, txt, 'text/plain', false, shouldShare);
+    }
+  }
+
+  // Motor universal para Guardar o Compartir en Android usando @capacitor/filesystem y @capacitor/share
+  async function saveOrShareFileNative(fullFileName, dataContent, mimeType, isBase64Data = false, shareImmediately = false) {
+    try {
+      const hasCapFS = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Filesystem;
+      if (hasCapFS) {
+        const { Filesystem, Share } = Capacitor.Plugins;
+        const base64Payload = isBase64Data ? dataContent : utf8ToBase64(dataContent);
+
+        // Guardar en carpeta Documents del teléfono
+        const writeRes = await Filesystem.writeFile({
+          path: fullFileName,
+          data: base64Payload,
+          directory: 'DOCUMENTS',
+          recursive: true
+        });
+
+        showToast(`✅ Guardado en Documentos: ${fullFileName}`);
+
+        if (shareImmediately && Share) {
+          await Share.share({
+            title: fullFileName,
+            text: `Documento generado con MicroWord NART`,
+            url: writeRes.uri,
+            dialogTitle: 'Compartir documento con...'
+          });
+        }
+        return;
+      }
+    } catch (capErr) {
+      console.warn('Fallback web activado:', capErr);
+    }
+
+    // Fallback para Navegador Web o si requiere compartir vía Web Share API
+    const blob = isBase64Data
+      ? base64ToBlob(dataContent, mimeType)
+      : new Blob([dataContent], { type: mimeType });
+
+    if (shareImmediately && navigator.canShare) {
+      const fileObj = new File([blob], fullFileName, { type: mimeType });
+      if (navigator.canShare({ files: [fileObj] })) {
+        await navigator.share({ title: fullFileName, files: [fileObj] });
+        return;
+      }
+    }
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1142,146 +3124,543 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    showToast(`⬇ Descargado: ${fullFileName}`);
   }
 
-  // ================= HERRAMIENTAS DE LAS DEMÁS PESTAÑAS =================
-  async function pasteClipboard() {
+  function utf8ToBase64(str) {
+    return window.btoa(unescape(encodeURIComponent(str)));
+  }
+
+  function base64ToBlob(b64Data, contentType = '') {
+    const byteCharacters = atob(b64Data);
+    const byteArrays = [];
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+      const slice = byteCharacters.slice(offset, offset + 512);
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+      byteArrays.push(new Uint8Array(byteNumbers));
+    }
+    return new Blob(byteArrays, { type: contentType });
+  }
+
+  // Exportar a Word (.DOC) Compatible con MS Word y WhatsApp
+  async function exportWordDoc(shareDirect = false, anonymous = true) {
+    const name = (docTitleInput.value || 'Documento1').trim() + '.doc';
+    const htmlDoc = buildStandaloneHTML(anonymous, true);
+    await saveOrShareFileNative(name, htmlDoc, 'application/msword', false, shareDirect);
+  }
+
+  function buildStandaloneHTML(anonymous = true, isWordMime = false) {
+    const headerTxt = document.getElementById('doc-header-band').innerHTML;
+    const footerTxt = document.getElementById('footer-custom-text').innerHTML;
+    const footerNum = document.getElementById('footer-page-number').innerHTML;
+    const metaAuthor = anonymous ? '' : '<meta name="author" content="MicroWord NART">';
+
+    const wordXmlns = isWordMime
+      ? `xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'`
+      : '';
+
+    return `<html ${wordXmlns}>
+      <head>
+        <meta charset="utf-8">
+        ${metaAuthor}
+        <title>${anonymous ? 'Documento' : docTitleInput.value}</title>
+        <style>
+          body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #000; }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+          td, th { border: 1px solid #666; padding: 6px; }
+          blockquote { border-left: 4px solid #185ABD; padding-left: 10px; font-style: italic; }
+          pre { background: #f4f4f4; padding: 10px; font-family: Consolas, monospace; }
+        </style>
+      </head>
+      <body>
+        ${headerTxt ? `<div style="color:#666;font-size:9pt;margin-bottom:15px;">${headerTxt}</div>` : ''}
+        ${editor.innerHTML}
+        ${(footerTxt || footerNum) ? `<div style="color:#666;font-size:9pt;margin-top:20px;border-top:1px solid #ccc;padding-top:6px;">${footerTxt} <div>${footerNum}</div></div>` : ''}
+      </body>
+    </html>`;
+  }
+
+  // Exportar a PDF (con compresor de imágenes opcional y respaldo en Android)
+  async function exportNativePDF(compressImages = false, shareDirect = false) {
+    if (compressImages) {
+      showToast('⚡ Comprimiendo imágenes para PDF ligero...');
+      await compressAllDocumentImages(0.55, 900);
+    }
+
+    // Intentar abrir el diálogo de impresión nativo de Android/Navegador
+    const wasReflow = document.body.classList.contains('reflow-mode');
+    if (wasReflow) document.body.classList.remove('reflow-mode');
+
     try {
-      const text = await navigator.clipboard.readText();
-      if (text) execCmd('insertText', text);
-    } catch (e) {
-      alert('Mantén presionado sobre la hoja blanca y toca "Pegar".');
+      window.print();
+    } catch (e) {}
+
+    if (wasReflow) document.body.classList.add('reflow-mode');
+
+    // Si el usuario pidió compartir directo en Android, también generamos versión lista para enviar
+    if (shareDirect) {
+      await exportWordDoc(true, true);
     }
   }
 
-  function insertTable() {
-    const rows = parseInt(prompt('Número de filas:', '3'), 10);
-    const cols = parseInt(prompt('Número de columnas:', '3'), 10);
-    if (rows > 0 && cols > 0) {
-      let html = '<table><tbody>';
-      for (let r = 0; r < rows; r++) {
-        html += '<tr>';
-        for (let c = 0; c < cols; c++) html += '<td><br></td>';
-        html += '</tr>';
-      }
-      html += '</tbody></table><p><br></p>';
-      execCmd('insertHTML', html);
+  async function compressAllDocumentImages(quality = 0.6, maxWidth = 1000) {
+    const imgs = editor.querySelectorAll('img');
+    for (const img of imgs) {
+      if (!img.src.startsWith('data:image')) continue;
+      await new Promise((resolve) => {
+        const temp = new Image();
+        temp.onload = () => {
+          const scale = Math.min(1, maxWidth / temp.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = temp.width * scale;
+          canvas.height = temp.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(temp, 0, 0, canvas.width, canvas.height);
+          img.src = canvas.toDataURL('image/jpeg', quality);
+          resolve();
+        };
+        temp.onerror = resolve;
+        temp.src = img.src;
+      });
     }
   }
 
-  function insertImageFile(input) {
-    if (input.files && input.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const imgHtml = '<img src="' + e.target.result + '" style="max-width:100%;height:auto;margin:8px 0;" /><p><br></p>';
-        execCmd('insertHTML', imgHtml);
-      };
-      reader.readAsDataURL(input.files[0]);
-      input.value = '';
+  // Exportar como Imagen Larga Continua (.JPG) 100% Offline usando SVG ForeignObject + Canvas
+  async function exportLongImage(shareDirect = false) {
+    showToast('🖼️ Generando Imagen Larga JPG...');
+    const fileName = (docTitleInput.value || 'Documento1').trim() + '.jpg';
+    const width = 794; // Ancho A4 en px a 96 DPI
+    const contentHeight = Math.max(1123, docStage.scrollHeight + 80);
+
+    const clonedStage = docStage.cloneNode(true);
+    clonedStage.style.background = '#FFFFFF';
+    clonedStage.style.color = '#000000';
+    clonedStage.style.width = width + 'px';
+    clonedStage.style.minHeight = contentHeight + 'px';
+    clonedStage.style.padding = '40px';
+    clonedStage.style.boxSizing = 'border-box';
+
+    const svgString = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${contentHeight}">
+        <foreignObject width="100%" height="100%">
+          <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Calibri,Arial,sans-serif;background:#fff;color:#000;width:${width}px;height:${contentHeight}px;">
+            ${clonedStage.outerHTML}
+          </div>
+        </foreignObject>
+      </svg>`;
+
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = async () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = contentHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, width, contentHeight);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+
+      const jpgDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+      const base64Clean = jpgDataUrl.split(',')[1];
+      await saveOrShareFileNative(fileName, base64Clean, 'image/jpeg', true, shareDirect);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      showToast('Guardando vista alternativa...');
+      exportWordDoc(shareDirect);
+    };
+    img.src = url;
+  }
+
+  function shareDocumentDirect(type) {
+    if (type === 'pdf') exportLongImage(true);
+    else exportWordDoc(true, true);
+  }
+
+  function quickNativeShare() {
+    exportWordDoc(true, true);
+  }
+
+  /* ================== 12. ABRIR ARCHIVOS LOCALES Y DESDE WHATSAPP (INTENTS) ================== */
+  function createNewDocument() {
+    if (editor.innerText.trim().length > 0) {
+      if (!confirm('¿Crear un documento nuevo en blanco? Se guardará una copia en el historial local.')) return;
+      saveSnapshotManual();
     }
+    editor.innerHTML = '<p><br></p>';
+    docTitleInput.value = 'Documento1';
+    updateDocumentStats();
+    showToast('📄 Lienzo nuevo listo');
   }
 
-  function insertLink() {
-    const url = prompt('Dirección del enlace (URL):', 'https://');
-    if (url && url !== 'https://') execCmd('createLink', url);
+  function triggerOpenFile() {
+    document.getElementById('hidden-file-open').click();
   }
 
-  function insertDate() {
-    execCmd('insertText', new Date().toLocaleDateString('es-NI') + ' ');
+  function handleFileOpen(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!confirm(`¿Deseas abrir y habilitar la edición para "${file.name}"?`)) return;
+
+    docTitleInput.value = file.name.replace(/\.[^/.]+$/, '');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      loadExternalContentIntoEditor(content, file.name);
+    };
+    reader.readAsText(file);
+    event.target.value = '';
   }
 
-  function insertPageBreak() {
-    execCmd('insertHTML', '<hr style="border:none;border-top:2px dashed #C8C6C4;margin:24px 0;"><p><br></p>');
-  }
-
-  let borderActive = false;
-  function togglePageBorder() {
-    borderActive = !borderActive;
-    editor.style.outline = borderActive ? '2px solid #000' : 'none';
-    editor.style.outlineOffset = borderActive ? '-12px' : '0';
-  }
-
-  function setMargins(px) {
-    editor.style.padding = px;
-  }
-
-  function setOrientation(mode) {
-    if (mode === 'landscape') {
-      editor.style.maxWidth = '297mm';
-      editor.style.minHeight = '210mm';
+  function loadExternalContentIntoEditor(rawText, fileName = '') {
+    if (rawText.includes('<body') || rawText.includes('<p') || rawText.includes('<div')) {
+      const bodyMatch = rawText.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      editor.innerHTML = bodyMatch ? bodyMatch[1] : rawText;
     } else {
-      editor.style.maxWidth = '210mm';
-      editor.style.minHeight = '297mm';
+      const paragraphs = rawText.split(/\r?\n/).map(line => `<p>${line || '<br>'}</p>`).join('');
+      editor.innerHTML = paragraphs;
+    }
+    updateDocumentStats();
+    scanAndPromptMagicVariablesAuto();
+    showToast(`📂 Archivo abierto: ${fileName || 'Documento'}`);
+  }
+
+  // Listener para cuando el usuario abre un archivo .doc desde WhatsApp ("Abrir con MicroWord")
+  function setupExternalFileIntentListener() {
+    if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) {
+      Capacitor.Plugins.App.addListener('appUrlOpen', async (data) => {
+        if (data && data.url) {
+          if (!confirm('Has abierto un documento externo. ¿Deseas cargarlo y permitir su edición en MicroWord?')) return;
+          try {
+            const { Filesystem } = Capacitor.Plugins;
+            const fileRead = await Filesystem.readFile({ path: data.url });
+            const decoded = decodeURIComponent(escape(window.atob(fileRead.data)));
+            loadExternalContentIntoEditor(decoded, 'Archivo de WhatsApp');
+          } catch (err) {
+            showToast('Usa el botón Abrir Archivo para seleccionar el documento');
+          }
+        }
+      });
     }
   }
 
-  function insertTOC() {
-    const headings = editor.querySelectorAll('h1, h2, h3');
-    if (headings.length === 0) {
-      alert('Primero aplica estilos de "Título 1" o "Título 2" en tu documento para generar el índice.');
+  /* ================== 13. AUTOGUARDADO Y MÁQUINA DEL TIEMPO (HISTORIAL LOCAL) ================== */
+  function toggleAutosave(checked) {
+    autosaveEnabled = checked;
+    document.getElementById('status-save-indicator').textContent = checked ? '✓ Autoguardado ON' : '⏸ Autoguardado OFF';
+  }
+
+  function updateDocTitle(val) {
+    saveLocalDocument(true);
+  }
+
+  function saveLocalDocument(silent = false) {
+    try {
+      localStorage.setItem('mw_current_html', editor.innerHTML);
+      localStorage.setItem('mw_current_title', docTitleInput.value);
+      localStorage.setItem('mw_header_html', document.getElementById('doc-header-band').innerHTML);
+      localStorage.setItem('mw_footer_html', document.getElementById('footer-custom-text').innerHTML);
+      document.getElementById('status-save-indicator').textContent = '✓ Guardado ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (!silent) showToast('💾 Guardado en memoria local');
+    } catch (e) {}
+  }
+
+  function loadLocalDocument() {
+    const savedHtml = localStorage.getItem('mw_current_html');
+    const savedTitle = localStorage.getItem('mw_current_title');
+    if (savedHtml) editor.innerHTML = savedHtml;
+    if (savedTitle) docTitleInput.value = savedTitle;
+    document.getElementById('doc-header-band').innerHTML = localStorage.getItem('mw_header_html') || '';
+    document.getElementById('footer-custom-text').innerHTML = localStorage.getItem('mw_footer_html') || '';
+  }
+
+  function saveSnapshotManual() {
+    saveLocalDocument(false);
+    const snap = {
+      time: new Date().toLocaleString('es-NI'),
+      title: docTitleInput.value,
+      html: editor.innerHTML
+    };
+    historySnapshots.push(snap);
+    if (historySnapshots.length > 20) historySnapshots.shift();
+    try {
+      localStorage.setItem('mw_history_snaps', JSON.stringify(historySnapshots));
+    } catch (e) {}
+    showToast('🕒 Versión guardada en la Máquina del Tiempo');
+  }
+
+  function loadHistoryFromStorage() {
+    try {
+      historySnapshots = JSON.parse(localStorage.getItem('mw_history_snaps') || '[]');
+    } catch (e) {
+      historySnapshots = [];
+    }
+  }
+
+  function refreshHistoryModalUI() {
+    const slider = document.getElementById('history-slider');
+    const label = document.getElementById('history-info-label');
+    const preview = document.getElementById('history-preview-box');
+    if (historySnapshots.length === 0) {
+      saveSnapshotManual();
+    }
+    slider.max = Math.max(0, historySnapshots.length - 1);
+    slider.value = slider.max;
+    previewHistorySnapshot(slider.value);
+  }
+
+  function previewHistorySnapshot(idx) {
+    const snap = historySnapshots[idx];
+    if (!snap) return;
+    document.getElementById('history-info-label').textContent = `Versión (${ Number(idx) + 1 }/${ historySnapshots.length }): ${snap.time}`;
+    document.getElementById('history-preview-box').innerHTML = snap.html;
+  }
+
+  function restoreHistorySnapshot() {
+    const idx = document.getElementById('history-slider').value;
+    const snap = historySnapshots[idx];
+    if (snap) {
+      editor.innerHTML = snap.html;
+      docTitleInput.value = snap.title || docTitleInput.value;
+      closeModal('modal-history');
+      updateDocumentStats();
+      showToast('⏪ Versión restaurada con éxito');
+    }
+  }
+
+  /* ================== 14. REVISIÓN, ESTADÍSTICAS, ZOOM Y BUSCAR/REEMPLAZAR ================== */
+  function getEstimatedPageCount() {
+    const Breaks = editor.querySelectorAll('.visual-page-break').length;
+    const heightPages = Math.max(1, Math.ceil(editor.scrollHeight / 1050));
+    return Math.max(heightPages, Breaks + 1);
+  }
+
+  function updateDocumentStats() {
+    const text = editor.innerText.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const pages = getEstimatedPageCount();
+    document.getElementById('status-words').textContent = `${words} palabras`;
+    document.getElementById('status-pages').textContent = `Pág. 1 de ${pages}`;
+    updateFooterPageNumbers();
+  }
+
+  function showDocumentStats() {
+    const text = editor.innerText;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const charsWithSpaces = text.length;
+    const charsNoSpaces = text.replace(/\s+/g, '').length;
+    const paragraphs = editor.querySelectorAll('p, h1, h2, li').length;
+    alert(`📊 Estadísticas del Documento:\n\n• Páginas: ${getEstimatedPageCount()}\n• Palabras: ${words}\n• Caracteres (con espacios): ${charsWithSpaces}\n• Caracteres (sin espacios): ${charsNoSpaces}\n• Párrafos/Líneas: ${paragraphs}`);
+  }
+
+  function setDocumentZoom(val) {
+    const scale = parseInt(val, 10) / 100;
+    docStage.style.transform = `scale(${scale})`;
+    document.getElementById('zoom-label').textContent = val + '%';
+    document.getElementById('zoom-slider').value = val;
+  }
+
+  function stepZoom(delta) {
+    const current = parseInt(document.getElementById('zoom-slider').value, 10) || 100;
+    const next = Math.min(150, Math.max(50, current + delta));
+    setDocumentZoom(next);
+  }
+
+  function executeFindAndReplace() {
+    const findStr = document.getElementById('find-input').value;
+    const repStr = document.getElementById('replace-input').value;
+    if (!findStr) return;
+    const regex = new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    editor.innerHTML = editor.innerHTML.replace(regex, repStr);
+    closeModal('modal-find');
+    showToast('🔍 Reemplazo completado');
+  }
+
+  /* ================== 15. VARIABLES MÁGICAS {{CAMPOS}} E IA LOCAL OFFLINE ================== */
+  function insertMagicVariablePrompt() {
+    restoreSelection();
+    const name = prompt('Nombre de la Variable Mágica (ej. Nombre, Fecha, Cliente):', 'Nombre');
+    if (name && name.trim()) {
+      const clean = name.trim().replace(/[{}]/g, '');
+      document.execCommand('insertHTML', false, `<span class="magic-var-tag">{{${clean}}}</span>&nbsp;`);
+    }
+  }
+
+  function scanAndFillMagicVariables() {
+    const html = editor.innerHTML;
+    const matches = [...html.matchAll(/\{\{([^{}]+)\}\}/g)];
+    const uniqueVars = [...new Set(matches.map(m => m[1].trim()))];
+    if (uniqueVars.length === 0) {
+      showToast('No hay variables {{Campo}} en el documento. Inserta una primero.');
       return;
     }
-    let toc = '<div style="background:#F8F8F8;border:1px solid #D2D0CE;padding:12px;margin-bottom:14px;"><b>Contenido</b><ul style="margin-top:6px;padding-left:18px;">';
-    headings.forEach(h => {
-      toc += '<li>' + h.innerText + '</li>';
+    const container = document.getElementById('magic-vars-container');
+    container.innerHTML = '';
+    uniqueVars.forEach(v => {
+      container.innerHTML += `
+        <div>
+          <label class="modal-label">Valor para {{${v}}}:</label>
+          <input type="text" class="modal-input magic-var-input" data-varname="${v}" placeholder="Escribe ${v}..." />
+        </div>`;
     });
-    toc += '</ul></div><p><br></p>';
-    editor.innerHTML = toc + editor.innerHTML;
-    triggerAutoSave();
+    openModal('modal-variables');
   }
 
-  function insertFootnote() {
-    const note = prompt('Texto de la nota al pie:');
-    if (note) {
-      execCmd('insertHTML', '<sup>[1]</sup>');
-      editor.innerHTML += '<hr style="margin-top:24px;"><p style="font-size:9pt;color:#555;">[1] ' + note + '</p>';
-      triggerAutoSave();
+  function scanAndPromptMagicVariablesAuto() {
+    if (/\{\{[^{}]+\}\}/.test(editor.innerHTML)) {
+      setTimeout(() => scanAndFillMagicVariables(), 400);
     }
   }
 
-  function showStats() {
-    const text = editor.innerText.replace(/\u200B/g, '').trim();
-    const words = text === '' ? 0 : text.split(/\s+/).length;
-    const chars = text.length;
-    alert('Estadísticas del documento:\n\n• Palabras: ' + words + '\n• Caracteres: ' + chars);
+  function applyMagicVariables() {
+    const inputs = document.querySelectorAll('.magic-var-input');
+    let html = editor.innerHTML;
+    inputs.forEach(inp => {
+      const varName = inp.getAttribute('data-varname');
+      const val = inp.value;
+      if (val) {
+        const reg = new RegExp(`\\{\\{\\s*${varName}\\s*\\}\\}`, 'g');
+        html = html.replace(reg, val);
+      }
+    });
+    editor.innerHTML = html;
+    closeModal('modal-variables');
+    showToast('🪄 Plantilla autocompletada');
   }
 
-  function toggleSpellcheck() {
-    editor.spellcheck = !editor.spellcheck;
-    alert('Corrector ortográfico: ' + (editor.spellcheck ? 'Activado' : 'Desactivado'));
+  // Escáner OCR (Cámara + Extracción de Texto)
+  function triggerCameraOCR() {
+    document.getElementById('hidden-ocr-input').click();
   }
 
-  function toggleRuler() {
-    const r = document.getElementById('rulerBar');
-    r.style.display = r.style.display === 'none' ? 'flex' : 'none';
+  async function handleOcrCapture(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    showToast('📷 Analizando imagen capturada...');
+
+    // Si el navegador soporta TextDetector nativo de Android/Chrome
+    if ('TextDetector' in window) {
+      try {
+        const bitmap = await createImageBitmap(file);
+        const detector = new window.TextDetector();
+        const texts = await detector.detect(bitmap);
+        const extracted = texts.map(t => t.rawValue).join('\n');
+        if (extracted.trim()) {
+          restoreSelection();
+          document.execCommand('insertText', false, extracted);
+          showToast('✨ Texto extraído con éxito');
+          return;
+        }
+      } catch (e) {}
+    }
+
+    // Si no tiene motor OCR nativo, inserta la foto de la pizarra/libro con opción de transcripción
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      restoreSelection();
+      document.execCommand('insertHTML', false, `<img src="${e.target.result}" class="doc-img-inline" /><p><i>[Nota de captura insertada]</i></p>`);
+      showToast('📷 Captura insertada en el documento');
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
   }
 
-  function findAndReplace() {
-    const find = prompt('Buscar palabra o frase:');
-    if (!find) return;
-    const replace = prompt('Reemplazar "' + find + '" por:', '');
-    if (replace !== null) {
-      editor.innerHTML = editor.innerHTML.split(find).join(replace);
-      triggerAutoSave();
+  // Asistente IA Local (Conexión con Ollama en Android o Motor Offline Integrado)
+  function configureOllamaUrl() {
+    const url = prompt('URL local de Ollama/GGUF:', ollamaEndpoint);
+    if (url) {
+      ollamaEndpoint = url.trim();
+      localStorage.setItem('mw_ollama_url', ollamaEndpoint);
+    }
+    const mod = prompt('Nombre del modelo local (ej. llama3.2:1b, qwen2.5:0.5b):', ollamaModel);
+    if (mod) {
+      ollamaModel = mod.trim();
+      localStorage.setItem('mw_ollama_model', ollamaModel);
     }
   }
 
-  function setZoom(val) {
-    currentZoom = parseInt(val, 10);
-    editor.style.zoom = currentZoom + '%';
-    document.getElementById('zoomSlider').value = currentZoom;
-    document.getElementById('zoomLabel').textContent = currentZoom + '%';
+  function openAiQuickMenu() {
+    switchTab('panel-vista', document.querySelector('[data-tab="panel-vista"]'));
+    runLocalAI();
   }
 
-  function clearDocument() {
-    if (confirm('¿Crear un documento nuevo en blanco? Se borrará el contenido actual.')) {
-      editor.innerHTML = '<p><br></p>';
-      docNameInput.value = 'Documento 1';
-      document.title = 'Documento 1';
-      localStorage.removeItem('microword_v2_html');
-      updateStats();
+  async function runLocalAI() {
+    restoreSelection();
+    const sel = window.getSelection();
+    const selectedText = (sel && !sel.isCollapsed) ? sel.toString() : editor.innerText;
+    if (!selectedText.trim()) {
+      showToast('Escribe o selecciona texto primero');
+      return;
+    }
+
+    const action = document.getElementById('select-ai-action').value;
+    showToast('🤖 Procesando con IA Local...');
+
+    let systemPrompt = 'Corrige la ortografía y mejora la redacción en español sin explicaciones adicionales: ';
+    if (action === 'formal') systemPrompt = 'Reescribe este texto con un tono altamente profesional, ejecutivo y formal en español: ';
+    else if (action === 'summarize') systemPrompt = 'Resume los puntos clave de este texto en español de forma concisa: ';
+    else if (action === 'expand') systemPrompt = 'Desarrolla y amplía esta idea con más detalle y estructura profesional en español: ';
+
+    try {
+      const response = await fetch(ollamaEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: ollamaModel,
+          prompt: systemPrompt + '\n\n' + selectedText,
+          stream: false
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.response) {
+          replaceSelectedOrInsertText(data.response.trim());
+          showToast('✨ Texto mejorado con Ollama Local');
+          return;
+        }
+      }
+    } catch (err) {
+      // Fallback: Motor de Corrección y Formato Heurístico 100% Interno si Ollama está apagado
+      const processed = runBuiltInSmartProcessor(selectedText, action);
+      replaceSelectedOrInsertText(processed);
+      showToast('✨ Procesado con motor inteligente integrado');
+    }
+  }
+
+  function runBuiltInSmartProcessor(text, action) {
+    let clean = text.replace(/\s+/g, ' ').trim();
+    // Capitalizar inicio de oraciones y limpiar puntuación
+    clean = clean.replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
+    if (!/[.!?]$/.test(clean)) clean += '.';
+
+    if (action === 'formal') {
+      return clean
+        .replace(/\b(hola|buenas)\b/gi, 'Estimado/a:')
+        .replace(/\b(quiero|necesito)\b/gi, 'Solicito cordialmente')
+        .replace(/\b(gracias)\b/gi, 'Agradezco de antemano su atención');
+    } else if (action === 'summarize') {
+      const sentences = clean.split(/(?<=[.!?])\s+/);
+      return '• Resumen Ejecutivo: ' + sentences.slice(0, Math.max(1, Math.ceil(sentences.length / 2))).join(' ');
+    }
+    return clean;
+  }
+
+  function replaceSelectedOrInsertText(newTxt) {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed) {
+      document.execCommand('insertText', false, newTxt);
+    } else {
+      editor.innerHTML += `<p>${newTxt}</p>`;
     }
   }
 </script>
+
 </body>
 </html>
